@@ -4,30 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mundo dos Amigos - Início</title>
+    
+    <!-- O PONTO E A BARRA (./) GARANTEM QUE O GITHUB ENCONTRE A PASTA -->
     <link rel="stylesheet" href="./css/app.css">
     <link rel="stylesheet" href="./css/game.css">
 </head>
+
 <body>
+
 <main class="container">
-    <div id="perfil-container" role="button" tabindex="0" aria-label="Toque para mudar sua foto">
+
+    <div id="perfil-container" role="button" tabindex="0">
         <img id="foto-jogador" src="./img/avatar-padrao.png" alt="Foto do jogador" onerror="this.src='./img/avatar-padrao.png'">
         <p>Toque na foto para mudar</p>
         <input type="file" id="inputFoto" accept="image/*" style="display:none">
     </div>
+
     <h1>Mundo dos Amigos</h1>
-    <div class="flex-column" style="width: 100%; align-items: center;">
-        <input type="text" id="nomeJogador" placeholder="Qual é o seu nome?" aria-label="Digite seu nome" maxlength="15">
-    </div>
+
+    <input type="text" id="nomeJogador" placeholder="Digite seu nome..." autocomplete="off">
+
     <div class="menu-materias">
         <button class="btn" data-materia="soma">SOMA (+)</button>
         <button class="btn" data-materia="subtracao">SUBTRAÇÃO (-)</button>
         <button class="btn" data-materia="divisao">DIVISÃO (÷)</button>
     </div>
+
 </main>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="./js/firebase.js"></script>
+<!-- IMPORTANTE: VERIFIQUE SE AS PASTAS NO VS CODE ESTÃO EM MINÚSCULO -->
 <script src="./js/voz.js"></script>
 <script src="./js/sons.js"></script>
 
@@ -35,46 +40,63 @@
 document.addEventListener("DOMContentLoaded", () => {
     const inputNome = document.getElementById("nomeJogador");
     const botoes = document.querySelectorAll(".btn");
+    const inputFoto = document.getElementById("inputFoto");
+    const fotoExibicao = document.getElementById("foto-jogador");
+    const perfilBtn = document.getElementById("perfil-container");
 
-    // ATIVAÇÃO DE ÁUDIO PARA IPHONE (iOS)
-    // O iPhone só libera som após um toque real do usuário
-    const ativarAudio = () => {
-        if (typeof gerenciarMusicaFundo === "function") {
-            gerenciarMusicaFundo("home");
+    // Recupera foto do LocalStorage
+    const fotoSalva = localStorage.getItem("fotoJogador");
+    if (fotoSalva) fotoExibicao.src = fotoSalva;
+
+    // Upload de foto
+    perfilBtn.addEventListener("click", () => inputFoto.click());
+    
+    inputFoto.addEventListener("change", function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                fotoExibicao.src = e.target.result;
+                localStorage.setItem("fotoJogador", e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
-        // Desbloqueia o motor de voz do iOS
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-        }
-        document.removeEventListener("click", ativarAudio);
-        document.removeEventListener("touchstart", ativarAudio);
-    };
-    document.addEventListener("click", ativarAudio);
-    document.addEventListener("touchstart", ativarAudio);
+    });
 
     function iniciar(materia) {
         const nome = inputNome.value.trim();
+
         if (nome.length < 2) {
-            if (typeof falar === "function") falar("Diga seu nome primeiro!", "erro");
+            alert("Por favor, digite seu nome!");
             return;
         }
+
         localStorage.setItem("nomeJogador", nome);
         localStorage.setItem("materiaAtual", materia);
-        
-        if (typeof tocarSom === "function") tocarSom('clique');
-        if (typeof falar === "function") falar(`Vamos lá ${nome}!`, "pergunta");
 
-        setTimeout(() => { window.location.href = "./game.html"; }, 1000);
+        // Tenta usar a função falar do seu voz.js se estiver carregado
+        if (typeof falar === "function") {
+            falar("Olá " + nome + ", vamos jogar " + materia, "pergunta");
+        } else {
+            // Fallback caso o script js/voz.js falhe no GitHub
+            const msg = new SpeechSynthesisUtterance("Olá " + nome);
+            msg.lang = "pt-BR";
+            window.speechSynthesis.speak(msg);
+        }
+
+        // Redirecionamento com caminho relativo (O ponto é vital aqui)
+        setTimeout(() => {
+            window.location.href = "./game.html";
+        }, 1000);
     }
 
     botoes.forEach(btn => {
-        btn.addEventListener("click", () => iniciar(btn.getAttribute("data-materia")));
-        btn.addEventListener("touchstart", (e) => { 
-            e.preventDefault(); 
-            iniciar(btn.getAttribute("data-materia")); 
+        btn.addEventListener("click", () => {
+            iniciar(btn.getAttribute("data-materia"));
         });
     });
 });
 </script>
+
 </body>
 </html>

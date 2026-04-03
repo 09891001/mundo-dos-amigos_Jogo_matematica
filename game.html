@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mundo dos Amigos - Jogando</title>
     
-    <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/game.css">
+    <!-- CAMINHOS RELATIVOS CORRIGIDOS (./) -->
+    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/game.css">
 </head>
 <body class="tema-nivel-1">
 
@@ -18,9 +19,10 @@
     <main id="game" class="container hidden">
         
         <header class="header-game">
+            <!-- Botão com som e redirecionamento relativo -->
             <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
             <div class="perfil-mini">
-                <img id="foto-perfil-jogo" src="img/avatar-padrao.png" alt="Sua foto" onerror="this.src='img/avatar-padrao.png'">
+                <img id="foto-perfil-jogo" src="./img/avatar-padrao.png" alt="Sua foto" onerror="this.src='./img/avatar-padrao.png'">
             </div>
         </header>
 
@@ -42,6 +44,7 @@
         </section>
 
         <section id="choices-container" class="flex-column">
+            <!-- Respostas em formato de cápsula para toque -->
             <div class="choice-container" role="button" tabindex="0">
                 <p class="choice-prefix">A</p>
                 <p class="choice-text" data-number="1"></p>
@@ -62,55 +65,41 @@
 
     </main>
 
+    <!-- SCRIPTS COM CAMINHOS RELATIVOS (ORDEM DE DEPENDÊNCIA) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="js/firebase.js"></script>
-    <script src="js/voz.js"></script>
-    <script src="js/sons.js"></script>
-    <script src="js/vibracao.js"></script>
-    <script src="js/apoio.js"></script>
     
-    <script src="js/game.js"></script>
+    <script src="./js/firebase.js"></script>
+    <script src="./js/voz.js"></script>
+    <script src="./js/sons.js"></script>
+    <script src="./js/vibracao.js"></script>
+    <script src="./js/apoio.js"></script>
+    
+    <!-- O motor do jogo deve ser o último -->
+    <script src="./js/game.js"></script>
 
     <script>
     document.addEventListener("DOMContentLoaded", () => {
-        // 1. SINCRONIZAÇÃO DA FOTO DO JOGADOR
+        // Recupera a foto salva no index.html
         const fotoSalva = localStorage.getItem("fotoJogador");
         const imgPerfil = document.getElementById("foto-perfil-jogo");
         if (fotoSalva && imgPerfil) {
             imgPerfil.src = fotoSalva;
         }
 
-        // 2. GESTÃO DO BOTÃO DE SAIR COM SOM
+        // Lógica do botão sair com som e redirecionamento relativo
         const btnSair = document.getElementById("btnSair");
         if (btnSair) {
             btnSair.addEventListener("click", (e) => {
                 e.preventDefault();
-                
-                // Toca o som de clique/sair
-                if (typeof tocarSom === "function") {
-                    tocarSom('sair'); 
-                }
+                if (typeof tocarSom === "function") tocarSom('sair');
+                if (typeof pararTodasAsFalas === "function") pararTodasAsFalas();
 
-                // Para as vozes imediatamente para evitar "eco" na transição
-                if (typeof pararTodasAsFalas === "function") {
-                    pararTodasAsFalas();
-                }
-
-                // Aguarda o som ser processado antes de mudar de página
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = './index.html';
                 }, 500);
             });
         }
-
-        // 3. ACESSIBILIDADE DE TOQUE: Permitir selecionar resposta com a tecla "Enter"
-        const choiceContainers = document.querySelectorAll('.choice-container');
-        choiceContainers.forEach(container => {
-            container.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') container.click();
-            });
-        });
     });
     </script>
 
