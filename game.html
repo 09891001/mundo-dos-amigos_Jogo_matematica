@@ -2,163 +2,115 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-
-    <!-- RESPONSIVO ACESSÍVEL -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mundo dos Amigos - Jogando</title>
-
-    <!-- CSS UNIFICADO -->
+    
+    <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/game.css">
 </head>
-
 <body class="tema-nivel-1">
 
-    <!-- HEADER -->
-    <header class="header-game">
+    <div id="loader" class="flex-center">
+        <div class="spinner"></div>
+        <p>A preparar o jogo...</p>
+    </div>
 
-        <button 
-            class="btn-sair" 
-            id="btnSair"
-            aria-label="Sair do jogo"
-        >
-            Sair
-        </button>
+    <main id="game" class="container hidden">
+        
+        <header class="header-game">
+            <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
+            <div class="perfil-mini">
+                <img id="foto-perfil-jogo" src="img/avatar-padrao.png" alt="Sua foto" onerror="this.src='img/avatar-padrao.png'">
+            </div>
+        </header>
 
-        <img 
-            id="foto-perfil-jogo" 
-            src="img/avatar-padrao.png" 
-            alt="Foto do jogador"
-        >
-    </header>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="game-container">
-
-        <!-- HUD -->
-        <section id="hud" aria-live="polite">
-            <p id="progressText">Fase 1/30</p>
-            <p>Pontos: <span id="score">0</span></p>
+        <section class="hud-container">
+            <div class="hud-item">
+                <p id="progressText" class="hud-prefix">Fase 1/30</p>
+                <div id="progressBar">
+                    <div id="progressBarFull"></div>
+                </div>
+            </div>
+            <div class="hud-item">
+                <p class="hud-prefix">Pontos</p>
+                <h2 id="score">0</h2>
+            </div>
         </section>
 
-        <!-- BARRA DE PROGRESSO -->
-        <div id="progressBar" aria-hidden="true">
-            <div id="progressBarFull"></div>
-        </div>
+        <section class="question-container">
+            <h2 id="question">A carregar...</h2>
+        </section>
 
-        <!-- PERGUNTA -->
-        <h2 id="question">
-            Carregando pergunta...
-        </h2>
-
-        <!-- RESPOSTAS -->
-        <section 
-            id="game" 
-            class="flex-center flex-column" 
-            role="group" 
-            aria-label="Opções de resposta"
-        >
-
-            <div 
-                class="choice-container" 
-                tabindex="0" 
-                role="button" 
-                aria-label="Resposta 1"
-            >
-                <p class="choice-text">0</p>
+        <section id="choices-container" class="flex-column">
+            <div class="choice-container" role="button" tabindex="0">
+                <p class="choice-prefix">A</p>
+                <p class="choice-text" data-number="1"></p>
             </div>
-
-            <div 
-                class="choice-container" 
-                tabindex="0" 
-                role="button" 
-                aria-label="Resposta 2"
-            >
-                <p class="choice-text">0</p>
+            <div class="choice-container" role="button" tabindex="0">
+                <p class="choice-prefix">B</p>
+                <p class="choice-text" data-number="2"></p>
             </div>
-
-            <div 
-                class="choice-container" 
-                tabindex="0" 
-                role="button" 
-                aria-label="Resposta 3"
-            >
-                <p class="choice-text">0</p>
+            <div class="choice-container" role="button" tabindex="0">
+                <p class="choice-prefix">C</p>
+                <p class="choice-text" data-number="3"></p>
             </div>
-
-            <div 
-                class="choice-container" 
-                tabindex="0" 
-                role="button" 
-                aria-label="Resposta 4"
-            >
-                <p class="choice-text">0</p>
+            <div class="choice-container" role="button" tabindex="0">
+                <p class="choice-prefix">D</p>
+                <p class="choice-text" data-number="4"></p>
             </div>
-
         </section>
 
     </main>
 
-    <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <!-- SCRIPTS -->
     <script src="js/firebase.js"></script>
     <script src="js/voz.js"></script>
     <script src="js/sons.js"></script>
     <script src="js/vibracao.js"></script>
+    <script src="js/apoio.js"></script>
+    
     <script src="js/game.js"></script>
 
     <script>
     document.addEventListener("DOMContentLoaded", () => {
-
-        const btnSair = document.getElementById("btnSair");
-        const foto = document.getElementById("foto-perfil-jogo");
-        const botoes = document.querySelectorAll(".choice-container");
-
-        // ===============================
-        // FOTO DO JOGADOR
-        // ===============================
-        try {
-            const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            if (foto) foto.src = fotoSalva;
-        } catch (e) {
-            console.error("[ERRO]: foto", e);
+        // 1. SINCRONIZAÇÃO DA FOTO DO JOGADOR
+        const fotoSalva = localStorage.getItem("fotoJogador");
+        const imgPerfil = document.getElementById("foto-perfil-jogo");
+        if (fotoSalva && imgPerfil) {
+            imgPerfil.src = fotoSalva;
         }
 
-        // ===============================
-        // BOTÃO SAIR
-        // ===============================
+        // 2. GESTÃO DO BOTÃO DE SAIR COM SOM
+        const btnSair = document.getElementById("btnSair");
         if (btnSair) {
-            btnSair.addEventListener("click", () => {
-                try {
-                    if (typeof tocarSom === "function") {
-                        tocarSom('sair');
-                    }
-
-                    setTimeout(() => {
-                        window.location.href = "index.html";
-                    }, 400);
-
-                } catch {
-                    window.location.href = "index.html";
+            btnSair.addEventListener("click", (e) => {
+                e.preventDefault();
+                
+                // Toca o som de clique/sair
+                if (typeof tocarSom === "function") {
+                    tocarSom('sair'); 
                 }
+
+                // Para as vozes imediatamente para evitar "eco" na transição
+                if (typeof pararTodasAsFalas === "function") {
+                    pararTodasAsFalas();
+                }
+
+                // Aguarda o som ser processado antes de mudar de página
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
             });
         }
 
-        // ===============================
-        // ACESSIBILIDADE TECLADO
-        // ===============================
-        botoes.forEach((btn) => {
-            btn.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    btn.click();
-                }
+        // 3. ACESSIBILIDADE DE TOQUE: Permitir selecionar resposta com a tecla "Enter"
+        const choiceContainers = document.querySelectorAll('.choice-container');
+        choiceContainers.forEach(container => {
+            container.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') container.click();
             });
         });
-
     });
     </script>
 

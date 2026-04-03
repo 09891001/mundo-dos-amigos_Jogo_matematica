@@ -1,318 +1,198 @@
 /**
- * MOTOR DO JOGO - MUNDO DOS AMIGOS (BLINDADO)
- * Seguro, acessível, performático e sem quebra
+ * MUNDO DOS AMIGOS - Lógica Principal (game.js)
+ * Versão: 2.1 - Correção de IDs e Música
  */
 
-document.addEventListener("DOMContentLoaded", () => {
+const question = document.getElementById("question");
+const choices = Array.from(document.getElementsByClassName("choice-text"));
+const progressText = document.getElementById("progressText");
+const scoreText = document.getElementById("score");
+const progressBarFull = document.getElementById("progressBarFull");
+const loader = document.getElementById("loader");
+const gameArea = document.getElementById("game");
 
-    // ===============================
-    // ELEMENTOS
-    // ===============================
-    const elPergunta = document.getElementById('question');
-    const botoes = Array.from(document.querySelectorAll(".choice-container"));
-    const elScore = document.getElementById('score');
-    const elBarra = document.getElementById('progressBarFull');
-    const elFase = document.getElementById('progressText');
+let currentQuestion = {};
+let acceptingAnswers = false;
+let score = 0;
+let questionCounter = 0;
+let lastSupportTime = 0;
+const SUPPORT_INTERVAL = 15000;
+let consecutiveErrors = 0;
 
-    // ===============================
-    // ESTADO GLOBAL
-    // ===============================
-    let fase = 1;
-    let nivel = 1;
-    let errosSeguidos = 0;
-    let score = 0;
-    let respostaCorreta = 0;
-    let bloqueado = false;
-    let combo = 0;
+const nomeJogador = localStorage.getItem("nomeJogador") || "Amigo";
+const materia = localStorage.getItem("materiaAtual") || "soma";
 
-    const nomeJogador = localStorage.getItem("nomeJogador") || "Amigo";
-    const materia = localStorage.getItem("materiaAtual") || "soma";
-
-    // ===============================
-    // INICIAR JOGO
-    // ===============================
-    function iniciarJogo() {
-        console.log("[SISTEMA]: Iniciando jogo para " + nomeJogador);
-
-        try {
-            if (typeof carregarProgresso === "function") {
-                carregarProgresso(nomeJogador, (dados) => {
-                    if (dados) {
-                        fase = parseInt(dados.fase_atual) || 1;
-                        score = parseInt(dados.pontos) || 0;
-                    }
-                    atualizarHUD();
-                    proximaPergunta();
-                });
-            } else {
-                atualizarHUD();
-                proximaPergunta();
-            }
-        } catch (e) {
-            console.error("[ERRO]: iniciarJogo", e);
-            atualizarHUD();
-            proximaPergunta();
-        }
+const startGame = () => {
+    questionCounter = 0;
+    score = 0;
+    consecutiveErrors = 0;
+    
+    // Mostra o jogo e esconde o loader (Correção do erro classList)
+    if (gameArea && loader) {
+        gameArea.classList.remove("hidden");
+        loader.classList.add("hidden");
     }
 
-    // ===============================
-    // HUD
-    // ===============================
-    function atualizarHUD() {
-        if (elScore) elScore.innerText = score;
-        if (elFase) elFase.innerText = `Fase ${fase}/30`;
-
-        if (elBarra) {
-            const progresso = (fase / 30) * 100;
-            elBarra.style.width = progresso + "%";
-        }
-    }
-
-    // ===============================
-    // PERGUNTA
-    // ===============================
-    function proximaPergunta() {
-        try {
-            if (fase > 30) {
-                localStorage.setItem("mostRecentScore", score);
-                window.location.href = "end.html";
-                return;
+    // Carrega progresso do Firebase ou inicia novo
+    if (typeof carregarProgresso === "function") {
+        carregarProgresso(nomeJogador, (dados) => {
+            if (dados) {
+                questionCounter = (parseInt(dados.fase_atual) || 1) - 1;
+                score = parseInt(dados.pontos) || 0;
+                scoreText.innerText = score;
             }
-
-            bloqueado = false;
-
-            nivel = fase <= 10 ? 1 : (fase <= 20 ? 2 : 3);
-            document.body.className = `tema-nivel-${nivel}`;
-
-            atualizarHUD();
-
-            if (typeof gerenciarMusicaFundo === "function") {
-                try { gerenciarMusicaFundo(nivel); } catch {}
-            }
-
-            let limite = nivel === 1 ? 5 : (nivel === 2 ? 10 : 20);
-            limite = Math.max(2, limite - errosSeguidos);
-
-            const n1 = Math.floor(Math.random() * limite) + 1;
-            const n2 = Math.floor(Math.random() * limite) + 1;
-
-            if (materia === "soma") {
-                respostaCorreta = n1 + n2;
-                elPergunta.innerText = `Quanto é ${n1} + ${n2}?`;
-            } else if (materia === "subtracao") {
-                const maior = Math.max(n1, n2);
-                const menor = Math.min(n1, n2);
-                respostaCorreta = maior - menor;
-                elPergunta.innerText = `Quanto é ${maior} - ${menor}?`;
-            } else if (materia === "divisao") {
-                respostaCorreta = n1;
-                elPergunta.innerText = `Quanto é ${n1 * n2} ÷ ${n2}?`;
-            } else {
-                respostaCorreta = n1 + n2;
-                elPergunta.innerText = `Quanto é ${n1} + ${n2}?`;
-            }
-
-            aplicarAcessibilidade();
-            montarOpcoes();
-
-            if (typeof narrar === "function") {
-                narrar(elPergunta.innerText);
-            }
-
-        } catch (e) {
-            console.error("[ERRO]: proximaPergunta", e);
-        }
-    }
-
-    // ===============================
-    // ACESSIBILIDADE
-    // ===============================
-    function aplicarAcessibilidade() {
-        if (!elPergunta) return;
-
-        elPergunta.setAttribute("tabindex", "-1");
-        elPergunta.setAttribute("aria-live", "polite");
-
-        setTimeout(() => {
-            try { elPergunta.focus(); } catch {}
-        }, 100);
-    }
-
-    // ===============================
-    // OPÇÕES
-    // ===============================
-    function montarOpcoes() {
-        let opcoes = [respostaCorreta];
-
-        while (opcoes.length < 4) {
-            let erro1 = respostaCorreta + Math.floor(Math.random() * 4) + 1;
-            let erro2 = Math.abs(respostaCorreta - (Math.floor(Math.random() * 3) + 1));
-
-            if (!opcoes.includes(erro1)) opcoes.push(erro1);
-            if (opcoes.length < 4 && !opcoes.includes(erro2)) opcoes.push(erro2);
-        }
-
-        opcoes.sort(() => Math.random() - 0.5);
-
-        botoes.forEach((btn, i) => {
-            const texto = btn.querySelector('.choice-text');
-
-            if (texto) texto.innerText = opcoes[i];
-
-            btn.classList.remove("correto", "errado");
-
-            btn.onclick = null;
-            btn.addEventListener("click", () => verificarResposta(opcoes[i], btn));
+            getNextQuestion();
         });
+    } else {
+        getNextQuestion();
+    }
+};
+
+const getNextQuestion = () => {
+    if (questionCounter >= 30) {
+        localStorage.setItem("mostRecentScore", score);
+        return window.location.assign("end.html");
     }
 
-    // ===============================
-    // RESPOSTA
-    // ===============================
-    function verificarResposta(escolha, botao) {
-        if (bloqueado) return;
-        bloqueado = true;
+    questionCounter++;
+    progressText.innerText = `Fase ${questionCounter}/30`;
+    progressBarFull.style.width = `${(questionCounter / 30) * 100}%`;
 
-        try {
-            if (typeof tocarSom === "function") tocarSom('clique');
+    // Gerenciar Música por Nível (Correção da música que não tocava)
+    const nivel = questionCounter <= 10 ? 1 : (questionCounter <= 20 ? 2 : 3);
+    document.body.className = `tema-nivel-${nivel}`;
+    if (typeof gerenciarMusicaFundo === "function") {
+        gerenciarMusicaFundo(nivel);
+    }
 
-            const rect = botao.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
+    const { q, options, answer } = generateMathQuestion(nivel);
+    currentQuestion = {
+        question: q,
+        answer: options.indexOf(answer) + 1
+    };
 
-            if (escolha === respostaCorreta) {
+    question.innerText = currentQuestion.question;
 
-                combo++;
+    choices.forEach((choice, index) => {
+        choice.innerText = options[index];
+        choice.parentElement.classList.remove("correct", "incorrect");
+    });
 
-                if (combo >= 3) mostrarCombo(combo);
+    falar(currentQuestion.question, "pergunta");
+    acceptingAnswers = true;
+};
 
-                score += 10;
-                fase++;
-                errosSeguidos = 0;
+// Continua na Parte 2 para não quebrar o código...
+// ==========================================
+// LÓGICA DE RESPOSTA E GERAÇÃO DE CÁLCULOS
+// ==========================================
 
-                botao.classList.add("correto");
+const generateMathQuestion = (nivel) => {
+    let max = nivel === 1 ? 10 : (nivel === 2 ? 20 : 50);
+    let op = localStorage.getItem("materiaAtual") || "soma";
+    
+    let n1 = Math.floor(Math.random() * max) + 1;
+    let n2 = Math.floor(Math.random() * max) + 1;
+    let q, answer;
 
-                if (elScore) elScore.innerText = score;
+    if (op === "soma") {
+        q = `${n1} + ${n2}`;
+        answer = n1 + n2;
+    } else if (op === "subtracao") {
+        if (n1 < n2) [n1, n2] = [n2, n1];
+        q = `${n1} - ${n2}`;
+        answer = n1 - n2;
+    } else if (op === "divisao") {
+        answer = Math.floor(Math.random() * 10) + 1;
+        n2 = Math.floor(Math.random() * 5) + 1;
+        n1 = answer * n2;
+        q = `${n1} ÷ ${n2}`;
+    }
 
-                for (let i = 0; i < 5; i++) criarEstrela(x, y);
+    let options = [answer];
+    while (options.length < 4) {
+        let wrong = answer + (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+        if (wrong >= 0 && !options.includes(wrong)) options.push(wrong);
+    }
+    return { q, options: options.sort(() => Math.random() - 0.5), answer };
+};
 
-                if (typeof tocarSomAcerto === "function") tocarSomAcerto();
-                if (typeof narrarAcerto === "function") narrarAcerto();
-                if (typeof vibrarAcerto === "function") vibrarAcerto();
+// EVENTO DE CLIQUE NAS RESPOSTAS
+choices.forEach(choice => {
+    choice.parentElement.addEventListener("click", () => {
+        if (!acceptingAnswers) return;
 
-                if (typeof salvarProgresso === "function") {
-                    try { salvarProgresso(nomeJogador, fase, score); } catch {}
-                }
+        acceptingAnswers = false;
+        const selectedAnswer = choice.dataset["number"];
+        const classToApply = selectedAnswer == currentQuestion.answer ? "correct" : "incorrect";
 
-                setTimeout(animarTransicao, 1000);
-
-            } else {
-
-                combo = 0;
-                errosSeguidos++;
-
-                botao.classList.add("errado");
-
-                if (typeof tocarSomErro === "function") tocarSomErro();
-                if (typeof vibrarErro === "function") vibrarErro();
-                if (typeof narrarErro === "function") narrarErro(elPergunta.innerText);
-
-                setTimeout(animarTransicao, 1200);
+        if (classToApply === "correct") {
+            score += 10;
+            scoreText.innerText = score;
+            consecutiveErrors = 0;
+            
+            tocarSomAcerto();
+            vibrarAcerto();
+            
+            choice.parentElement.classList.add("correct");
+            
+            // Salva progresso no Firebase
+            if (typeof salvarProgresso === "function") {
+                salvarProgresso(nomeJogador, questionCounter + 1, score);
             }
 
-        } catch (e) {
-            console.error("[ERRO]: verificarResposta", e);
-            bloqueado = false;
+            falar("Muito bem! Você acertou!", "sucesso", () => {
+                setTimeout(getNextQuestion, 500);
+            });
+
+        } else {
+            consecutiveErrors++;
+            tocarSomErro();
+            vibrarErro();
+            choice.parentElement.classList.add("incorrect");
+
+            const agora = Date.now();
+            if (consecutiveErrors >= 3 && (agora - lastSupportTime > SUPPORT_INTERVAL)) {
+                lastSupportTime = agora;
+                iniciarSequenciaApoio();
+            } else {
+                falar("Não tem problema, vamos tentar de novo.", "erro", () => {
+                    setTimeout(() => {
+                        choice.parentElement.classList.remove("incorrect");
+                        acceptingAnswers = true;
+                    }, 500);
+                });
+            }
         }
-    }
-
-    // ===============================
-    // TRANSIÇÃO
-    // ===============================
-    function animarTransicao() {
-        const container = document.querySelector(".game-container");
-
-        if (!container) {
-            bloqueado = false;
-            proximaPergunta();
-            return;
-        }
-
-        container.classList.add("fade-out");
-
-        setTimeout(() => {
-            proximaPergunta();
-
-            container.classList.remove("fade-out");
-            container.classList.add("fade-in");
-
-            setTimeout(() => {
-                container.classList.remove("fade-in");
-            }, 300);
-
-        }, 300);
-    }
-
-    // ===============================
-    // COMBO
-    // ===============================
-    function mostrarCombo(valor) {
-        const div = document.createElement("div");
-        div.innerText = `🔥 Combo x${valor}`;
-
-        div.style.position = "fixed";
-        div.style.top = "120px";
-        div.style.left = "50%";
-        div.style.transform = "translateX(-50%)";
-        div.style.fontSize = "2rem";
-        div.style.fontWeight = "bold";
-        div.style.color = "#f97316";
-        div.style.zIndex = "9999";
-
-        document.body.appendChild(div);
-
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(`Combo de ${valor}`);
-            msg.lang = "pt-BR";
-            window.speechSynthesis.speak(msg);
-        }
-
-        setTimeout(() => div.remove(), 1200);
-    }
-
-    // ===============================
-    // ESTRELAS (COM LIMITE)
-    // ===============================
-    function criarEstrela(x, y) {
-        if (document.querySelectorAll(".estrela").length > 20) return;
-
-        const estrela = document.createElement("div");
-
-        estrela.className = "estrela";
-        estrela.innerText = "⭐";
-
-        estrela.style.position = "fixed";
-        estrela.style.left = x + "px";
-        estrela.style.top = y + "px";
-        estrela.style.fontSize = "24px";
-        estrela.style.pointerEvents = "none";
-        estrela.style.zIndex = "9999";
-        estrela.style.transition = "transform 0.8s ease, opacity 0.8s ease";
-
-        document.body.appendChild(estrela);
-
-        setTimeout(() => {
-            estrela.style.transform = "translateY(-80px)";
-            estrela.style.opacity = "0";
-        }, 10);
-
-        setTimeout(() => estrela.remove(), 800);
-    }
-
-    // ===============================
-    // START
-    // ===============================
-    iniciarJogo();
-
+    });
 });
+
+// SISTEMA DE APOIO COM TRAVAMENTO (Melhoria 1)
+function iniciarSequenciaApoio() {
+    acceptingAnswers = false; // BLOQUEIA O JOGO
+    const nome = localStorage.getItem("nomeJogador") || "Amigo";
+
+    falar(`${nome}, vamos parar um pouquinho para respirar?`, "apoio", () => {
+        setTimeout(() => {
+            falar("Cheire a florzinha pelo nariz...", "apoio", () => {
+                setTimeout(() => {
+                    falar("Agora sopre a velinha devagar...", "apoio", () => {
+                        setTimeout(() => {
+                            falar("Você consegue! Vamos olhar a conta de novo.", "apoio", () => {
+                                // Limpa as marcações de erro e destrava
+                                document.querySelectorAll(".choice-container").forEach(el => {
+                                    el.classList.remove("incorrect");
+                                });
+                                acceptingAnswers = true; // DESTRAVA
+                                falar(currentQuestion.question, "pergunta");
+                            });
+                        }, 1000);
+                    });
+                }, 3000); // Pausa para simular a respiração
+            });
+        }, 1000);
+    });
+}
+
+// INICIALIZAÇÃO DO JOGO
+window.onload = startGame;
