@@ -1,8 +1,12 @@
 /**
- * MUNDO DOS AMIGOS - Lógica Principal (game.js)
- * Versão: 2.1 - Correção de IDs e Música
+ * MUNDO DOS AMIGOS - Motor Lógico (game.js)
+ * Versão: 3.0 - Edição Final (Lead Developer)
+ * Otimizado para iPhone, Acessibilidade TEA e Feedback Multimodal.
  */
 
+// ===============================
+// ELEMENTOS DO DOM
+// ===============================
 const question = document.getElementById("question");
 const choices = Array.from(document.getElementsByClassName("choice-text"));
 const progressText = document.getElementById("progressText");
@@ -11,29 +15,35 @@ const progressBarFull = document.getElementById("progressBarFull");
 const loader = document.getElementById("loader");
 const gameArea = document.getElementById("game");
 
+// ===============================
+// ESTADO GLOBAL DO JOGO
+// ===============================
 let currentQuestion = {};
 let acceptingAnswers = false;
 let score = 0;
 let questionCounter = 0;
 let lastSupportTime = 0;
-const SUPPORT_INTERVAL = 15000;
 let consecutiveErrors = 0;
+const SUPPORT_INTERVAL = 15000; // 15 segundos entre apoios
 
 const nomeJogador = localStorage.getItem("nomeJogador") || "Amigo";
 const materia = localStorage.getItem("materiaAtual") || "soma";
 
+// ===============================
+// INICIALIZAÇÃO
+// ===============================
 const startGame = () => {
     questionCounter = 0;
     score = 0;
     consecutiveErrors = 0;
-    
-    // Mostra o jogo e esconde o loader (Correção do erro classList)
+    lastSupportTime = Date.now();
+
     if (gameArea && loader) {
         gameArea.classList.remove("hidden");
         loader.classList.add("hidden");
     }
 
-    // Carrega progresso do Firebase ou inicia novo
+    // Tenta carregar progresso do Firebase (v8)
     if (typeof carregarProgresso === "function") {
         carregarProgresso(nomeJogador, (dados) => {
             if (dados) {
@@ -48,23 +58,31 @@ const startGame = () => {
     }
 };
 
+// ===============================
+// FLUXO DE PERGUNTAS
+// ===============================
 const getNextQuestion = () => {
     if (questionCounter >= 30) {
         localStorage.setItem("mostRecentScore", score);
-        return window.location.assign("end.html");
+        return window.location.assign("./end.html");
     }
 
     questionCounter++;
     progressText.innerText = `Fase ${questionCounter}/30`;
-    progressBarFull.style.width = `${(questionCounter / 30) * 100}%`;
+    if (progressBarFull) {
+        progressBarFull.style.width = `${(questionCounter / 30) * 100}%`;
+    }
 
-    // Gerenciar Música por Nível (Correção da música que não tocava)
+    // Define nível e tema visual
     const nivel = questionCounter <= 10 ? 1 : (questionCounter <= 20 ? 2 : 3);
     document.body.className = `tema-nivel-${nivel}`;
+
+    // Gerencia Música de Fundo (sons.js)
     if (typeof gerenciarMusicaFundo === "function") {
         gerenciarMusicaFundo(nivel);
     }
 
+    // Gera o cálculo matemático
     const { q, options, answer } = generateMathQuestion(nivel);
     currentQuestion = {
         question: q,
@@ -73,40 +91,45 @@ const getNextQuestion = () => {
 
     question.innerText = currentQuestion.question;
 
+    // Renderiza opções nos balões
     choices.forEach((choice, index) => {
         choice.innerText = options[index];
-        choice.parentElement.classList.remove("correct", "incorrect");
+        const container = choice.parentElement;
+        container.classList.remove("correct", "incorrect");
     });
 
-    falar(currentQuestion.question, "pergunta");
+    // Narração da Pergunta (voz.js)
+    if (typeof falar === "function") {
+        falar(currentQuestion.question, "pergunta");
+    }
+
     acceptingAnswers = true;
 };
 
-// Continua na Parte 2 para não quebrar o código...
-// ==========================================
-// LÓGICA DE RESPOSTA E GERAÇÃO DE CÁLCULOS
-// ==========================================
-
+// ===============================
+// GERADOR DE CÁLCULOS
+// ===============================
 const generateMathQuestion = (nivel) => {
     let max = nivel === 1 ? 10 : (nivel === 2 ? 20 : 50);
-    let op = localStorage.getItem("materiaAtual") || "soma";
-    
     let n1 = Math.floor(Math.random() * max) + 1;
     let n2 = Math.floor(Math.random() * max) + 1;
     let q, answer;
 
-    if (op === "soma") {
+    if (materia === "soma") {
         q = `${n1} + ${n2}`;
         answer = n1 + n2;
-    } else if (op === "subtracao") {
+    } else if (materia === "subtracao") {
         if (n1 < n2) [n1, n2] = [n2, n1];
         q = `${n1} - ${n2}`;
         answer = n1 - n2;
-    } else if (op === "divisao") {
+    } else if (materia === "divisao") {
         answer = Math.floor(Math.random() * 10) + 1;
         n2 = Math.floor(Math.random() * 5) + 1;
         n1 = answer * n2;
         q = `${n1} ÷ ${n2}`;
+    } else {
+        q = `${n1} + ${n2}`;
+        answer = n1 + n2;
     }
 
     let options = [answer];
@@ -117,26 +140,34 @@ const generateMathQuestion = (nivel) => {
     return { q, options: options.sort(() => Math.random() - 0.5), answer };
 };
 
-// EVENTO DE CLIQUE NAS RESPOSTAS
+// ===============================
+// GESTÃO DE TOQUE E RESPOSTAS
+// ===============================
 choices.forEach(choice => {
-    choice.parentElement.addEventListener("click", () => {
+    const container = choice.parentElement;
+
+    const handleSelection = (e) => {
         if (!acceptingAnswers) return;
+        
+        // Evita comportamento padrão de zoom/scroll no toque
+        if (e.type === 'touchstart') e.preventDefault();
 
         acceptingAnswers = false;
         const selectedAnswer = choice.dataset["number"];
-        const classToApply = selectedAnswer == currentQuestion.answer ? "correct" : "incorrect";
+        const acertou = selectedAnswer == currentQuestion.answer;
+        const classToApply = acertou ? "correct" : "incorrect";
 
-        if (classToApply === "correct") {
+        container.classList.add(classToApply);
+
+        if (acertou) {
             score += 10;
-            scoreText.innerText = score;
+            if (scoreText) scoreText.innerText = score;
             consecutiveErrors = 0;
             
-            tocarSomAcerto();
-            vibrarAcerto();
+            if (typeof tocarSomAcerto === "function") tocarSomAcerto();
+            if (typeof vibrarAcerto === "function") vibrarAcerto();
             
-            choice.parentElement.classList.add("correct");
-            
-            // Salva progresso no Firebase
+            // Salva progresso online
             if (typeof salvarProgresso === "function") {
                 salvarProgresso(nomeJogador, questionCounter + 1, score);
             }
@@ -144,42 +175,45 @@ choices.forEach(choice => {
             falar("Muito bem! Você acertou!", "sucesso", () => {
                 setTimeout(getNextQuestion, 500);
             });
-
         } else {
             consecutiveErrors++;
-            tocarSomErro();
-            vibrarErro();
-            choice.parentElement.classList.add("incorrect");
+            if (typeof tocarSomErro === "function") tocarSomErro();
+            if (typeof vibrarErro === "function") vibrarErro();
 
             const agora = Date.now();
             if (consecutiveErrors >= 3 && (agora - lastSupportTime > SUPPORT_INTERVAL)) {
                 lastSupportTime = agora;
                 iniciarSequenciaApoio();
             } else {
-                falar("Não tem problema, vamos tentar de novo.", "erro", () => {
+                falar("Tente de novo com calma.", "erro", () => {
                     setTimeout(() => {
-                        choice.parentElement.classList.remove("incorrect");
+                        container.classList.remove("incorrect");
                         acceptingAnswers = true;
                     }, 500);
                 });
             }
         }
-    });
+    };
+
+    // Escuta tanto clique quanto toque (Essencial para iPhone/Android)
+    container.addEventListener("click", handleSelection);
+    container.addEventListener("touchstart", handleSelection, { passive: false });
 });
 
-// SISTEMA DE APOIO COM TRAVAMENTO (Melhoria 1)
+// ===============================
+// APOIO PSICOLÓGICO (TRAVAMENTO)
+// ===============================
 function iniciarSequenciaApoio() {
-    acceptingAnswers = false; // BLOQUEIA O JOGO
-    const nome = localStorage.getItem("nomeJogador") || "Amigo";
-
-    falar(`${nome}, vamos parar um pouquinho para respirar?`, "apoio", () => {
+    acceptingAnswers = false; // BLOQUEIA O JOGO TOTALMENTE
+    
+    falar(`${nomeJogador}, vamos respirar um pouco?`, "apoio", () => {
         setTimeout(() => {
             falar("Cheire a florzinha pelo nariz...", "apoio", () => {
                 setTimeout(() => {
                     falar("Agora sopre a velinha devagar...", "apoio", () => {
                         setTimeout(() => {
-                            falar("Você consegue! Vamos olhar a conta de novo.", "apoio", () => {
-                                // Limpa as marcações de erro e destrava
+                            falar("Você é capaz! Vamos tentar a conta mais uma vez.", "apoio", () => {
+                                // Limpa erros visuais e destrava
                                 document.querySelectorAll(".choice-container").forEach(el => {
                                     el.classList.remove("incorrect");
                                 });
@@ -188,11 +222,11 @@ function iniciarSequenciaApoio() {
                             });
                         }, 1000);
                     });
-                }, 3000); // Pausa para simular a respiração
+                }, 3000); // Pausa da respiração
             });
         }, 1000);
     });
 }
 
-// INICIALIZAÇÃO DO JOGO
+// INICIALIZAÇÃO
 window.onload = startGame;

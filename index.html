@@ -4,115 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mundo dos Amigos - Início</title>
-    
-    <!-- CSS UNIFICADO (Conforme sua pasta css/) -->
-    <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/game.css">
 </head>
-
 <body>
-
 <main class="container">
-
-    <!-- PERFIL DO JOGADOR -->
     <div id="perfil-container" role="button" tabindex="0" aria-label="Toque para mudar sua foto">
-        <!-- Busca avatar da pasta img/ vista no print -->
-        <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto do jogador" onerror="this.src='img/avatar-padrao.png'">
+        <img id="foto-jogador" src="./img/avatar-padrao.png" alt="Foto do jogador" onerror="this.src='./img/avatar-padrao.png'">
         <p>Toque na foto para mudar</p>
         <input type="file" id="inputFoto" accept="image/*" style="display:none">
     </div>
-
     <h1>Mundo dos Amigos</h1>
-
     <div class="flex-column" style="width: 100%; align-items: center;">
-        <input type="text" id="nomeJogador" placeholder="Qual é o seu nome?" autocomplete="off" aria-label="Digite seu nome aqui" maxlength="15">
+        <input type="text" id="nomeJogador" placeholder="Qual é o seu nome?" aria-label="Digite seu nome" maxlength="15">
     </div>
-
-    <div class="menu-materias" role="navigation" aria-label="Escolha o que quer estudar">
+    <div class="menu-materias">
         <button class="btn" data-materia="soma">SOMA (+)</button>
         <button class="btn" data-materia="subtracao">SUBTRAÇÃO (-)</button>
         <button class="btn" data-materia="divisao">DIVISÃO (÷)</button>
     </div>
-
 </main>
 
-<!-- SCRIPTS DE INFRAESTRUTURA (CONFORME SUA PASTA js/ NO PRINT) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="js/firebase.js"></script>
-<script src="js/voz.js"></script>
-<script src="js/sons.js"></script>
-<script src="js/vibracao.js"></script> <!-- Adicionado: Faltava no seu index anterior -->
-<script src="js/apoio.js"></script>    <!-- Adicionado: Visto na sua pasta js/ do VS Code -->
+<script src="./js/firebase.js"></script>
+<script src="./js/voz.js"></script>
+<script src="./js/sons.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const inputNome = document.getElementById("nomeJogador");
-    const fotoExibicao = document.getElementById("foto-jogador");
-    const inputFoto = document.getElementById("inputFoto");
-    const perfilBtn = document.getElementById("perfil-container");
     const botoes = document.querySelectorAll(".btn");
 
-    // 1. CARREGAR DADOS EXISTENTES
-    const nomeSalvo = localStorage.getItem("nomeJogador");
-    const fotoSalva = localStorage.getItem("fotoJogador");
-
-    if (nomeSalvo) inputNome.value = nomeSalvo;
-    if (fotoSalva) fotoExibicao.src = fotoSalva;
-
-    // 2. GERENCIAR FOTO
-    perfilBtn.addEventListener("click", () => inputFoto.click());
-
-    inputFoto.addEventListener("change", function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                fotoExibicao.src = e.target.result;
-                localStorage.setItem("fotoJogador", e.target.result);
-                if (typeof falar === "function") falar("Que foto linda!", "sucesso");
-            };
-            reader.readAsDataURL(file);
+    // ATIVAÇÃO DE ÁUDIO PARA IPHONE (iOS)
+    // O iPhone só libera som após um toque real do usuário
+    const ativarAudio = () => {
+        if (typeof gerenciarMusicaFundo === "function") {
+            gerenciarMusicaFundo("home");
         }
-    });
+        // Desbloqueia o motor de voz do iOS
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+        }
+        document.removeEventListener("click", ativarAudio);
+        document.removeEventListener("touchstart", ativarAudio);
+    };
+    document.addEventListener("click", ativarAudio);
+    document.addEventListener("touchstart", ativarAudio);
 
-    // 3. LOGICA DE INÍCIO
-    function iniciarJogo(materia) {
+    function iniciar(materia) {
         const nome = inputNome.value.trim();
-
-        if (!nome || nome.length < 2) {
-            if (typeof falar === "function") falar("Ops! Digite seu nome primeiro.", "erro");
-            inputNome.focus();
+        if (nome.length < 2) {
+            if (typeof falar === "function") falar("Diga seu nome primeiro!", "erro");
             return;
         }
-
         localStorage.setItem("nomeJogador", nome);
         localStorage.setItem("materiaAtual", materia);
-
+        
         if (typeof tocarSom === "function") tocarSom('clique');
-        if (typeof falar === "function") falar(`Tudo pronto, ${nome}! Vamos estudar ${materia}.`, "pergunta");
+        if (typeof falar === "function") falar(`Vamos lá ${nome}!`, "pergunta");
 
-        botoes.forEach(b => b.disabled = true);
-
-        setTimeout(() => {
-            window.location.href = "game.html";
-        }, 1200);
+        setTimeout(() => { window.location.href = "./game.html"; }, 1000);
     }
 
     botoes.forEach(btn => {
-        btn.addEventListener("click", () => iniciarJogo(btn.getAttribute("data-materia")));
+        btn.addEventListener("click", () => iniciar(btn.getAttribute("data-materia")));
+        btn.addEventListener("touchstart", (e) => { 
+            e.preventDefault(); 
+            iniciar(btn.getAttribute("data-materia")); 
+        });
     });
-
-    // 4. MÚSICA DE FUNDO
-    document.body.addEventListener("click", () => {
-        if (typeof gerenciarMusicaFundo === "function") gerenciarMusicaFundo("home");
-    }, { once: true });
-
-    setTimeout(() => {
-        if (typeof falar === "function") falar("Olá! Digite seu nome e escolha uma matéria.", "pergunta");
-    }, 800);
 });
 </script>
-
 </body>
 </html>
