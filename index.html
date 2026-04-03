@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- RESPONSIVO ACESSÍVEL -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mundo dos Amigos - Início</title>
+
+    <!-- CSS UNIFICADO -->
+    <link rel="stylesheet" href="css/game.css">
+</head>
+
+<body>
+
+<main class="container">
+
+    <!-- PERFIL -->
+    <div 
+        id="perfil-container" 
+        role="button" 
+        tabindex="0" 
+        aria-label="Alterar foto do jogador"
+    >
+
+        <img 
+            id="foto-jogador" 
+            src="img/avatar-padrao.png" 
+            alt="Foto do jogador"
+        >
+
+        <p>
+            Toque na foto para mudar
+        </p>
+
+        <input 
+            type="file" 
+            id="inputFoto" 
+            accept="image/*"
+            style="display:none"
+        >
+    </div>
+
+    <!-- TÍTULO -->
+    <h1>Olá!</h1>
+
+    <!-- INPUT NOME -->
+    <input 
+        type="text" 
+        id="nomeJogador" 
+        placeholder="Digite seu nome..." 
+        autocomplete="off"
+        aria-label="Digite seu nome"
+    >
+
+    <!-- MENU -->
+    <div class="menu-materias" role="navigation" aria-label="Escolha a matéria">
+
+        <button class="btn" data-materia="soma">
+            SOMA (+)
+        </button>
+
+        <button class="btn" data-materia="subtracao">
+            SUBTRAÇÃO (-)
+        </button>
+
+        <button class="btn" data-materia="divisao">
+            DIVISÃO (÷)
+        </button>
+
+    </div>
+
+</main>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<!-- SCRIPTS -->
+<script src="js/firebase.js"></script>
+<script src="js/sons.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const inputNome = document.getElementById("nomeJogador");
+    const foto = document.getElementById("foto-jogador");
+    const inputFoto = document.getElementById("inputFoto");
+    const perfil = document.getElementById("perfil-container");
+    const botoes = document.querySelectorAll(".btn");
+
+    // ===============================
+    // CARREGAR FOTO
+    // ===============================
+    try {
+        const fotoSalva = localStorage.getItem("fotoJogador");
+        if (fotoSalva && foto) {
+            foto.src = fotoSalva;
+        }
+    } catch (e) {
+        console.error("[ERRO]: carregar foto", e);
+    }
+
+    // ===============================
+    // ABRIR GALERIA
+    // ===============================
+    function abrirGaleria() {
+        if (inputFoto) inputFoto.click();
+    }
+
+    if (perfil) {
+        perfil.addEventListener("click", abrirGaleria);
+
+        perfil.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                abrirGaleria();
+            }
+        });
+    }
+
+    // ===============================
+    // PROCESSAR FOTO
+    // ===============================
+    if (inputFoto) {
+        inputFoto.addEventListener("change", (event) => {
+            try {
+                const arquivo = event.target.files[0];
+                if (!arquivo) return;
+
+                const leitor = new FileReader();
+
+                leitor.onload = (e) => {
+                    const linkFoto = e.target.result;
+
+                    if (foto) foto.src = linkFoto;
+                    localStorage.setItem("fotoJogador", linkFoto);
+                };
+
+                leitor.readAsDataURL(arquivo);
+
+            } catch (e) {
+                console.error("[ERRO]: processar foto", e);
+            }
+        });
+    }
+
+    // ===============================
+    // MÚSICA (primeira interação)
+    // ===============================
+    document.addEventListener("click", () => {
+        if (typeof gerenciarMusicaFundo === "function") {
+            gerenciarMusicaFundo("home");
+        }
+    }, { once: true });
+
+    // ===============================
+    // VALIDAÇÃO
+    // ===============================
+    function nomeValido(nome) {
+        if (!nome) return false;
+        nome = nome.trim();
+        return nome.length >= 2;
+    }
+
+    // ===============================
+    // INICIAR JOGO
+    // ===============================
+    function iniciar(materia) {
+        try {
+            const nome = inputNome.value.trim();
+
+            if (!nomeValido(nome)) {
+                alert("Digite um nome válido!");
+                return;
+            }
+
+            localStorage.setItem("nomeJogador", nome);
+            localStorage.setItem("materiaAtual", materia);
+
+            if (!localStorage.getItem("fotoJogador")) {
+                localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
+            }
+
+            // voz
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+
+                const msg = new SpeechSynthesisUtterance(`Olá ${nome}, vamos jogar ${materia}`);
+                msg.lang = "pt-BR";
+                window.speechSynthesis.speak(msg);
+            }
+
+            // bloqueia múltiplos cliques
+            botoes.forEach(b => b.disabled = true);
+
+            setTimeout(() => {
+                window.location.href = "game.html";
+            }, 800);
+
+        } catch (e) {
+            console.error("[ERRO]: iniciar jogo", e);
+        }
+    }
+
+    // ===============================
+    // EVENTOS BOTÕES
+    // ===============================
+    botoes.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const materia = btn.getAttribute("data-materia");
+            iniciar(materia);
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>
