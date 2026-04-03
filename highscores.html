@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- RESPONSIVO ACESSÍVEL -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ranking - Mundo dos Amigos</title>
+
+    <!-- CSS UNIFICADO -->
+    <link rel="stylesheet" href="css/game.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <!-- TÍTULO -->
+        <h1 id="finalScore">
+            Ranking dos Melhores
+        </h1>
+
+        <!-- LISTA -->
+        <ul 
+            id="highScoresList" 
+            aria-live="polite"
+            aria-label="Lista de melhores pontuações"
+        >
+        </ul>
+
+        <!-- BOTÃO -->
+        <a 
+            href="index.html" 
+            class="btn"
+            aria-label="Voltar para o início"
+        >
+            Voltar ao início
+        </a>
+
+    </main>
+
+    <!-- SCRIPT -->
+    <script src="js/highscores.js"></script>
+
+</body>
+</html>

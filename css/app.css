@@ -1,0 +1,146 @@
+/* CONFIGURAÇÃO DE BASE - FOCO MOBILE */
+:root {
+    background-color: #f0f9ff; /* Azul bem clarinho para não cansar a vista */
+    font-size: 62.5%; /* Facilita o cálculo de tamanhos (1rem = 10px) */
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #334155; /* Cor cinza escuro suave para leitura */
+}
+
+
+
+/* CABEÇALHOS (Tamanhos Grandes para TEA) */
+h1 {
+    font-size: 4.5rem;
+    color: #0284c7;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+h2 {
+    font-size: 3.2rem;
+    margin-bottom: 3rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+h3 {
+    font-size: 2.4rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+
+
+/* UTILITÁRIOS DE LAYOUT (Ajustado para Celular) */
+.container {
+    width: 100%; /* Corrigido de 100vh para 100% */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 50rem; /* Limite de largura para não esticar demais */
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+
+/* BOTÕES DE MENU (Estilo Mobile-First) */
+.btn {
+    font-size: 2.2rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 35rem;
+    text-align: center;
+    border: none;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-decoration: none;
+    color: white;
+    background-color: #0ea5e9;
+    box-shadow: 0 8px 15px rgba(14, 165, 233, 0.2);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.96); /* Feedback de toque no celular */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn[disabled] {
+    cursor: not-allowed;
+    background-color: #cbd5e1;
+    box-shadow: none;
+}
+
+
+
+/* FORMULÁRIOS E INPUTS (Caixas Grandes) */
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input {
+    margin-bottom: 2rem;
+    width: 90%;
+    max-width: 35rem;
+    padding: 2rem;
+    font-size: 2rem;
+    border: 3px solid #bae6fd;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    text-align: center;
+    outline: none;
+}
+
+input:focus {
+    border-color: #0ea5e9;
+}
+
+input::placeholder {
+    color: #94a3b8;
+}
+
+
+
+/* ESTILO DA FOTO DE PERFIL NO MENU */
+#foto-jogador {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    border: 5px solid #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    object-fit: cover;
+}

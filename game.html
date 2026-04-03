@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- RESPONSIVO ACESSÍVEL -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mundo dos Amigos - Jogando</title>
+
+    <!-- CSS UNIFICADO -->
+    <link rel="stylesheet" href="css/game.css">
+</head>
+
+<body class="tema-nivel-1">
+
+    <!-- HEADER -->
+    <header class="header-game">
+
+        <button 
+            class="btn-sair" 
+            id="btnSair"
+            aria-label="Sair do jogo"
+        >
+            Sair
+        </button>
+
+        <img 
+            id="foto-perfil-jogo" 
+            src="img/avatar-padrao.png" 
+            alt="Foto do jogador"
+        >
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="game-container">
+
+        <!-- HUD -->
+        <section id="hud" aria-live="polite">
+            <p id="progressText">Fase 1/30</p>
+            <p>Pontos: <span id="score">0</span></p>
+        </section>
+
+        <!-- BARRA DE PROGRESSO -->
+        <div id="progressBar" aria-hidden="true">
+            <div id="progressBarFull"></div>
+        </div>
+
+        <!-- PERGUNTA -->
+        <h2 id="question">
+            Carregando pergunta...
+        </h2>
+
+        <!-- RESPOSTAS -->
+        <section 
+            id="game" 
+            class="flex-center flex-column" 
+            role="group" 
+            aria-label="Opções de resposta"
+        >
+
+            <div 
+                class="choice-container" 
+                tabindex="0" 
+                role="button" 
+                aria-label="Resposta 1"
+            >
+                <p class="choice-text">0</p>
+            </div>
+
+            <div 
+                class="choice-container" 
+                tabindex="0" 
+                role="button" 
+                aria-label="Resposta 2"
+            >
+                <p class="choice-text">0</p>
+            </div>
+
+            <div 
+                class="choice-container" 
+                tabindex="0" 
+                role="button" 
+                aria-label="Resposta 3"
+            >
+                <p class="choice-text">0</p>
+            </div>
+
+            <div 
+                class="choice-container" 
+                tabindex="0" 
+                role="button" 
+                aria-label="Resposta 4"
+            >
+                <p class="choice-text">0</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- SCRIPTS -->
+    <script src="js/firebase.js"></script>
+    <script src="js/voz.js"></script>
+    <script src="js/sons.js"></script>
+    <script src="js/vibracao.js"></script>
+    <script src="js/game.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const btnSair = document.getElementById("btnSair");
+        const foto = document.getElementById("foto-perfil-jogo");
+        const botoes = document.querySelectorAll(".choice-container");
+
+        // ===============================
+        // FOTO DO JOGADOR
+        // ===============================
+        try {
+            const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
+            if (foto) foto.src = fotoSalva;
+        } catch (e) {
+            console.error("[ERRO]: foto", e);
+        }
+
+        // ===============================
+        // BOTÃO SAIR
+        // ===============================
+        if (btnSair) {
+            btnSair.addEventListener("click", () => {
+                try {
+                    if (typeof tocarSom === "function") {
+                        tocarSom('sair');
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 400);
+
+                } catch {
+                    window.location.href = "index.html";
+                }
+            });
+        }
+
+        // ===============================
+        // ACESSIBILIDADE TECLADO
+        // ===============================
+        botoes.forEach((btn) => {
+            btn.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    btn.click();
+                }
+            });
+        });
+
+    });
+    </script>
+
+</body>
+</html>
