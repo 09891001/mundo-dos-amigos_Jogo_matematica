@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // redireciona
-window.location.href = "./highscores.html".
+            window.location.href = "highscores.html";
 
         } catch (e) {
             console.error("[ERRO]: salvarPontuacao", e);

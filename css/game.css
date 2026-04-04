@@ -1,253 +1,253 @@
-/* ========================= */
-/* RESET GLOBAL */
-/* ========================= */
+/* ============================================================
+   🌍 RESET GLOBAL PROFISSIONAL
+   ============================================================ */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
     color: #334155;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
-/* ========================= */
-/* BASE */
-/* ========================= */
-:root {
-    font-size: 62.5%;
-}
-
+/* ============================================================
+   📱 BODY BASE + SAFE AREA (CELULAR)
+   ============================================================ */
 body {
     width: 100%;
-    min-height: 100vh;
-
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-
     overflow-x: hidden;
     overflow-y: auto;
-
-    background: linear-gradient(180deg, #a7f3d0, #86efac);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     transition: background 0.5s ease;
 }
 
-/* ========================= */
-/* HEADER */
-/* ========================= */
-.header-game {
-    position: fixed;
-    top: 0;
-    left: 0;
+/* ============================================================
+   🎨 TEMAS DINÂMICOS POR NÍVEL
+   ============================================================ */
+.tema-nivel-1 { background: linear-gradient(135deg, #a7f3d0, #67e8f9); }
+.tema-nivel-2 { background: linear-gradient(135deg, #fde68a, #fca5a5); }
+.tema-nivel-3 { background: linear-gradient(135deg, #c084fc, #60a5fa); }
 
-    width: 100%;
-    height: 80px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 10px 15px;
-    z-index: 1000;
-}
-
-.btn-sair {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-
-    padding: 12px 20px;
-    border-radius: 20px;
-
-    font-size: 1.4rem;
-    font-weight: bold;
-
-    cursor: pointer;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-#foto-perfil-jogo {
-    width: 60px;
-    height: 60px;
-
-    border-radius: 50%;
-    border: 3px solid white;
-
-    object-fit: cover;
-}
-
-/* ========================= */
-/* GAME CONTAINER */
-/* ========================= */
+/* ============================================================
+   🎮 CONTAINER PRINCIPAL (CORREÇÃO: TRANSIÇÃO SUAVE)
+   ============================================================ */
 .game-container {
-    margin-top: 100px;
-
+    flex: 1;
     width: 100%;
-    max-width: 600px;
-
-    padding: 15px;
-
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    
+    /* Suavização Total de Entrada e Saída */
+    transition: 
+        opacity 0.35s ease, 
+        transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* ========================= */
-/* HUD */
-/* ========================= */
-#hud {
+/* ============================================================
+   🧠 HEADER GLASS (MÁXIMO CONTRASTE)
+   ============================================================ */
+.header-game {
     width: 100%;
-
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
-
-    margin-bottom: 15px;
-
-    font-size: 1.8rem;
-    font-weight: bold;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* ========================= */
-/* PROGRESS BAR */
-/* ========================= */
+.btn-sair {
+    padding: 10px 20px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+#foto-perfil-jogo {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================================
+   📊 HUD & PROGRESSO (ENERGIA VIVA)
+   ============================================================ */
+#hud {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
 #progressBar {
     width: 100%;
-    height: 20px;
-
-    background-color: rgba(255,255,255,0.5);
-    border-radius: 12px;
-
-    margin-bottom: 25px;
-
+    height: 22px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
     overflow: hidden;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 #progressBarFull {
     height: 100%;
     width: 0%;
-
     background: linear-gradient(90deg, #0ea5e9, #22c55e);
-    transition: width 0.4s ease;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
+    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: brilhoBarra 2s infinite linear;
 }
 
-/* ========================= */
-/* QUESTION */
-/* ========================= */
+@keyframes brilhoBarra {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+    100% { filter: brightness(1); }
+}
+
+/* ============================================================
+   ❓ PERGUNTA (DESTAQUE MÁXIMO)
+   ============================================================ */
 #question {
-    font-size: 4rem;
-    font-weight: 900;
-
+    width: 100%;
     text-align: center;
-
+    font-size: 3.2rem;
+    font-weight: 900;
+    padding: 24px;
     margin: 20px 0;
-    padding: 15px;
-
-    background: rgba(255,255,255,0.8);
-
-    border-radius: 20px;
-    border: 4px solid #0284c7;
-
-    width: 100%;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.18),
+        inset 0 3px 6px rgba(255, 255, 255, 0.6);
 }
 
-/* ========================= */
-/* ANSWERS */
-/* ========================= */
-#game {
-    width: 100%;
-
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* ========================= */
-/* BOTÕES */
-/* ========================= */
+/* ============================================================
+   🎯 BOTÕES (CAMADAS E UX CORRIGIDA)
+   ============================================================ */
 .choice-container {
     width: 100%;
-    min-height: 110px;
-
+    min-height: 72px;
     display: flex;
-    justify-content: center;
     align-items: center;
-
-    background: linear-gradient(180deg, #ffffff, #dbeafe);
-
-    border: 3px solid #93c5fd;
-    border-radius: 30px;
-
-    box-shadow:
-        0 15px 35px rgba(0,0,0,0.25),
-        0 5px 10px rgba(0,0,0,0.15),
-        inset 0 2px 6px rgba(255,255,255,0.8);
-
+    padding: 18px;
+    margin: 12px 0;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
-
-    transition: all 0.2s ease;
-    padding: 10px;
+    box-shadow: 
+        0 12px 25px rgba(0, 0, 0, 0.18),
+        inset 0 3px 8px rgba(255, 255, 255, 0.6);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* HOVER */
-.choice-container:hover {
-    transform: translateY(-4px);
-
-    box-shadow:
-        0 20px 45px rgba(0,0,0,0.3),
-        0 10px 20px rgba(0,0,0,0.2);
+/* CORREÇÃO: ALINHAMENTO DO BULLET */
+.choice-container::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    background: #0ea5e9;
+    border-radius: 50%;
+    margin-right: 14px;
+    flex-shrink: 0; /* Impede a bolinha de achatar */
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
 }
 
-/* CLICK */
-.choice-container:active {
-    transform: scale(0.95);
-
-    box-shadow:
-        0 8px 15px rgba(0,0,0,0.2);
-}
-
-/* TEXTO */
 .choice-text {
-    font-size: 4rem;
-    font-weight: 900;
-    color: #1e293b;
+    font-size: 2.6rem;
+    font-weight: bold;
 }
 
-/* ========================= */
-/* FEEDBACK */
-/* ========================= */
+.choice-container:hover {
+    transform: scale(1.02);
+}
+
+.choice-container:active {
+    transform: scale(0.9);
+}
+
+/* FOCO ACESSÍVEL PROFISSIONAL */
+.choice-container:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 4px;
+}
+
+/* ============================================================
+   ✅ RESULTADOS (CORREÇÃO: VERMELHO PREMIUM)
+   ============================================================ */
 .correto {
-    border-color: #22c55e !important;
-    background: #dcfce7 !important;
+    background: linear-gradient(145deg, #22c55e, #16a34a) !important;
+    color: white !important;
+    box-shadow: 0 0 35px rgba(34, 197, 94, 0.8) !important;
+    transform: scale(1.08) !important;
 }
 
 .errado {
-    border-color: #ef4444 !important;
-    background: #fee2e2 !important;
+    background: linear-gradient(145deg, #f87171, #dc2626) !important;
+    color: white !important;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6) !important;
 }
 
-/* ========================= */
-/* TEMAS */
-/* ========================= */
-.tema-nivel-1 {
-    background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+/* ============================================================
+   🎬 ANIMAÇÕES TÉCNICAS (CORREÇÃO: JUMPEMOJI ADICIONADO)
+   ============================================================ */
+
+/* Animação dos Emojis no Cálculo Visual */
+@keyframes jumpEmoji {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-12px); }
 }
 
-.tema-nivel-2 {
-    background: linear-gradient(180deg, #bbf7d0, #4ade80);
+/* Efeito de Impacto do Combo */
+@keyframes popCombo {
+    0% { transform: translateX(-50%) scale(0); }
+    80% { transform: translateX(-50%) scale(1.2); }
+    100% { transform: translateX(-50%) scale(1); }
 }
 
-.tema-nivel-3 {
-    background: linear-gradient(180deg, #fef08a, #facc15);
+@keyframes entradaPergunta {
+    from { opacity: 0; transform: scale(0.8) translateY(20px); }
+    to { opacity: 1; transform: scale(1.05) translateY(0); }
 }
 
-/* ========================= */
-/* RESPONSIVO */
-/* ========================= */
-@media (max-width: 400px) {
-    #question {
-        font-size: 3rem;
-    }
-
-    .choice-text {
-        font-size: 3.5rem;
-    }
+/* ============================================================
+   📱 RESPONSIVIDADE FINA
+   ============================================================ */
+@media (max-width: 480px) {
+    #question { font-size: 2.3rem; padding: 18px; }
+    .choice-text { font-size: 2.2rem; }
+    .choice-container { min-height: 65px; margin: 8px 0; }
 }

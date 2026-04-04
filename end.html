@@ -2,9 +2,14 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- RESPONSIVO ACESSÍVEL -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Mundo dos Amigos - Parabéns!</title>
+
     <link rel="stylesheet" href="css/app.css">
+
     <style>
         .celebracao-container {
             display: flex;
@@ -15,20 +20,24 @@
             background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
             text-align: center;
         }
+
         .coroa-img {
             width: 150px;
             margin-bottom: 20px;
             animation: flutuar 2s infinite ease-in-out;
         }
+
         @keyframes flutuar {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
+
         .nome-vencedor {
             font-size: 2.5rem;
             color: #0369a1;
             margin: 10px 0;
         }
+
         .btn-voltar {
             width: 80%;
             padding: 25px;
@@ -40,44 +49,103 @@
             font-weight: bold;
             margin-top: 30px;
             box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
+            cursor: pointer;
+        }
+
+        .btn-voltar:active {
+            transform: scale(0.96);
         }
     </style>
 </head>
+
 <body>
 
-    <div class="celebracao-container">
-        <!-- Coroa de Mestre conforme Documentação -->
-        <img src="img/coroa.png" class="coroa-img" alt="Coroa de Mestre">
-        
-        <h1 style="font-size: 1.5rem; color: #64748b;">VOCÊ CONSEGUIU!</h1>
-        <h2 id="nomeDisplay" class="nome-vencedor">Jogador</h2>
-        
-        <p style="font-size: 1.2rem;">Pontuação Final: <span id="scoreFinal" style="font-weight: bold;">0</span></p>
+<div class="celebracao-container">
 
-        <button class="btn-voltar" onclick="jogarNovamente()">JOGAR NOVAMENTE</button>
-    </div>
+    <!-- IMAGEM -->
+    <img 
+        src="img/coroa.png" 
+        class="coroa-img" 
+        alt="Coroa de mestre conquistada"
+    >
 
-    <script>
-        // Lógica de Celebração
-        const nome = localStorage.getItem("nomeJogador") || "Amigo";
-        const score = localStorage.getItem("mostRecentScore") || 0;
+    <!-- TÍTULO -->
+    <h1 style="font-size: 1.5rem; color: #64748b;">
+        VOCÊ CONSEGUIU!
+    </h1>
 
-        document.getElementById("nomeDisplay").innerText = nome;
-        document.getElementById("scoreFinal").innerText = score;
+    <!-- NOME -->
+    <h2 
+        id="nomeDisplay" 
+        class="nome-vencedor"
+        aria-live="polite"
+    >
+        Jogador
+    </h2>
 
-        // Narração Final (Regra 16)
-        window.onload = () => {
-            const mensagem = new SpeechSynthesisUtterance(`Parabéns ${nome}! Você é um mestre da matemática! Ganhaste a coroa do Mundo dos Amigos!`);
-            mensagem.lang = 'pt-BR';
-            window.speechSynthesis.speak(mensagem);
-            
-            // Se tiver confete (opcional), dispara aqui
-            console.log("[FIM]: Celebração finalizada para " + nome);
-        };
+    <!-- SCORE -->
+    <p style="font-size: 1.2rem;">
+        Pontuação Final: 
+        <span id="scoreFinal" style="font-weight: bold;">
+            0
+        </span>
+    </p>
 
-        function jogarNovamente() {
-            window.location.href = "index.html";
+    <!-- BOTÃO -->
+    <button 
+        class="btn-voltar" 
+        onclick="jogarNovamente()"
+        aria-label="Jogar novamente"
+    >
+        JOGAR NOVAMENTE
+    </button>
+
+</div>
+
+<!-- VOZ PADRÃO -->
+<script src="js/voz.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const nome = localStorage.getItem("nomeJogador") || "Amigo";
+    const score = localStorage.getItem("mostRecentScore") || 0;
+
+    const elNome = document.getElementById("nomeDisplay");
+    const elScore = document.getElementById("scoreFinal");
+
+    // ===============================
+    // ATUALIZA UI
+    // ===============================
+    if (elNome) elNome.innerText = nome;
+    if (elScore) elScore.innerText = score;
+
+    // ===============================
+    // NARRAÇÃO FINAL (CORRETA)
+    // ===============================
+    if (typeof falar === "function") {
+        setTimeout(() => {
+            falar(`Parabéns ${nome}! Você é um mestre da matemática!`, "festa");
+        }, 300);
+    }
+
+});
+
+/**
+ * VOLTAR AO INÍCIO
+ */
+function jogarNovamente() {
+    try {
+        if (typeof tocarSom === "function") {
+            tocarSom('home');
         }
-    </script>
+    } catch {}
+
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 300);
+}
+</script>
+
 </body>
 </html>

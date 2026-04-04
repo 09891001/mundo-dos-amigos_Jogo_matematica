@@ -2,20 +2,46 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- RESPONSIVO ACESSÍVEL -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Ranking - Mundo dos Amigos</title>
-    <link rel="stylesheet" href="./css/app.css">
-    <link rel="stylesheet" href="./css/game.css">
+
+    <!-- CSS UNIFICADO -->
+    <link rel="stylesheet" href="css/game.css">
 </head>
+
 <body>
+
     <main class="container">
-        <h1>Melhores Amigos</h1>
-        <ul id="highScoresList" class="flex-column" style="list-style: none; padding: 0; width: 100%;">
-            <!-- Gerado pelo JS -->
+
+        <!-- TÍTULO -->
+        <h1 id="finalScore">
+            Ranking dos Melhores
+        </h1>
+
+        <!-- LISTA -->
+        <ul 
+            id="highScoresList" 
+            aria-live="polite"
+            aria-label="Lista de melhores pontuações"
+        >
         </ul>
-        <a href="./index.html" class="btn">VOLTAR AO INÍCIO</a>
+
+        <!-- BOTÃO -->
+        <a 
+            href="index.html" 
+            class="btn"
+            aria-label="Voltar para o início"
+        >
+            Voltar ao início
+        </a>
+
     </main>
 
-    <script src="./js/highscores.js"></script>
+    <!-- SCRIPT -->
+    <script src="js/highscores.js"></script>
+
 </body>
 </html>

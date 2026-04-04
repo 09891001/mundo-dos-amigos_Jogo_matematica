@@ -2,99 +2,166 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Mundo dos Amigos - Início</title>
-    
-    <!-- O PONTO E A BARRA (./) GARANTEM QUE O GITHUB ENCONTRE A PASTA -->
-    <link rel="stylesheet" href="./css/app.css">
-    <link rel="stylesheet" href="./css/game.css">
+
+    <link rel="stylesheet" href="css/game.css">
 </head>
 
 <body>
 
 <main class="container">
 
-    <div id="perfil-container" role="button" tabindex="0">
-        <img id="foto-jogador" src="./img/avatar-padrao.png" alt="Foto do jogador" onerror="this.src='./img/avatar-padrao.png'">
+    <div 
+        id="perfil-container" 
+        role="button" 
+        tabindex="0" 
+        aria-label="Alterar foto do jogador"
+    >
+
+        <img 
+            id="foto-jogador" 
+            src="img/avatar-padrao.png" 
+            alt="Foto do jogador"
+        >
+
         <p>Toque na foto para mudar</p>
-        <input type="file" id="inputFoto" accept="image/*" style="display:none">
+
+        <input 
+            type="file" 
+            id="inputFoto" 
+            accept="image/*"
+            style="display:none"
+        >
     </div>
 
-    <h1>Mundo dos Amigos</h1>
+    <h1>Olá!</h1>
 
-    <input type="text" id="nomeJogador" placeholder="Digite seu nome..." autocomplete="off">
+    <input 
+        type="text" 
+        id="nomeJogador" 
+        placeholder="Digite seu nome..." 
+        autocomplete="off"
+        aria-label="Digite seu nome"
+    >
 
-    <div class="menu-materias">
+    <div class="menu-materias" role="navigation" aria-label="Escolha a matéria">
+
         <button class="btn" data-materia="soma">SOMA (+)</button>
         <button class="btn" data-materia="subtracao">SUBTRAÇÃO (-)</button>
         <button class="btn" data-materia="divisao">DIVISÃO (÷)</button>
+
     </div>
 
 </main>
 
-<!-- IMPORTANTE: VERIFIQUE SE AS PASTAS NO VS CODE ESTÃO EM MINÚSCULO -->
-<script src="./js/voz.js"></script>
-<script src="./js/sons.js"></script>
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<!-- SCRIPTS -->
+<script src="js/firebase.js"></script>
+<script src="js/sons.js"></script>
+<script src="js/voz.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
     const inputNome = document.getElementById("nomeJogador");
-    const botoes = document.querySelectorAll(".btn");
+    const foto = document.getElementById("foto-jogador");
     const inputFoto = document.getElementById("inputFoto");
-    const fotoExibicao = document.getElementById("foto-jogador");
-    const perfilBtn = document.getElementById("perfil-container");
+    const perfil = document.getElementById("perfil-container");
+    const botoes = document.querySelectorAll(".btn");
 
-    // Recupera foto do LocalStorage
-    const fotoSalva = localStorage.getItem("fotoJogador");
-    if (fotoSalva) fotoExibicao.src = fotoSalva;
+    // FOTO
+    try {
+        const fotoSalva = localStorage.getItem("fotoJogador");
+        if (fotoSalva && foto) foto.src = fotoSalva;
+    } catch {}
 
-    // Upload de foto
-    perfilBtn.addEventListener("click", () => inputFoto.click());
-    
-    inputFoto.addEventListener("change", function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                fotoExibicao.src = e.target.result;
-                localStorage.setItem("fotoJogador", e.target.result);
-            };
-            reader.readAsDataURL(file);
+    function abrirGaleria() {
+        if (inputFoto) inputFoto.click();
+    }
+
+    perfil.addEventListener("click", abrirGaleria);
+    perfil.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            abrirGaleria();
         }
     });
 
+    // PROCESSAR FOTO
+    inputFoto.addEventListener("change", (event) => {
+        try {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+
+            leitor.onload = (e) => {
+                const linkFoto = e.target.result;
+                foto.src = linkFoto;
+                localStorage.setItem("fotoJogador", linkFoto);
+            };
+
+            leitor.readAsDataURL(arquivo);
+
+        } catch {}
+    });
+
+    // MÚSICA
+    document.addEventListener("click", () => {
+        if (typeof gerenciarMusicaFundo === "function") {
+            gerenciarMusicaFundo("home");
+        }
+    }, { once: true });
+
+    function nomeValido(nome) {
+        return nome && nome.trim().length >= 2;
+    }
+
     function iniciar(materia) {
-        const nome = inputNome.value.trim();
+        try {
+            const nome = inputNome.value.trim();
 
-        if (nome.length < 2) {
-            alert("Por favor, digite seu nome!");
-            return;
+            if (!nomeValido(nome)) {
+                alert("Digite um nome válido!");
+                return;
+            }
+
+            localStorage.setItem("nomeJogador", nome);
+            localStorage.setItem("materiaAtual", materia);
+
+            if (!localStorage.getItem("fotoJogador")) {
+                localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
+            }
+
+            // ✅ VOZ PADRÃO (CORRIGIDO)
+            if (typeof falar === "function") {
+                falar(`Olá ${nome}, vamos jogar ${materia}`);
+            }
+
+            botoes.forEach(b => b.disabled = true);
+
+            setTimeout(() => {
+                window.location.href = "game.html";
+            }, 800);
+
+        } catch (e) {
+            console.error(e);
         }
-
-        localStorage.setItem("nomeJogador", nome);
-        localStorage.setItem("materiaAtual", materia);
-
-        // Tenta usar a função falar do seu voz.js se estiver carregado
-        if (typeof falar === "function") {
-            falar("Olá " + nome + ", vamos jogar " + materia, "pergunta");
-        } else {
-            // Fallback caso o script js/voz.js falhe no GitHub
-            const msg = new SpeechSynthesisUtterance("Olá " + nome);
-            msg.lang = "pt-BR";
-            window.speechSynthesis.speak(msg);
-        }
-
-        // Redirecionamento com caminho relativo (O ponto é vital aqui)
-        setTimeout(() => {
-            window.location.href = "./game.html";
-        }, 1000);
     }
 
     botoes.forEach(btn => {
         btn.addEventListener("click", () => {
-            iniciar(btn.getAttribute("data-materia"));
+            const materia = btn.getAttribute("data-materia");
+            iniciar(materia);
         });
     });
+
 });
 </script>
 
