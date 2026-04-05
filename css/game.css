@@ -1,29 +1,33 @@
 /* ============================================================
-   🌍 RESET GLOBAL PROFISSIONAL
+   🌍 RESET GLOBAL E VARIÁVEIS (PADRÃO MOBILE SÊNIOR)
    ============================================================ */
+:root {
+    --primary: #0ea5e9;
+    --success: #22c55e;
+    --error: #ef4444;
+    --warning: #facc15;
+    --bg-light: #f8fafc;
+    --white: #ffffff;
+    --text-main: #334155;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    color: #334155;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
 }
 
-/* ============================================================
-   📱 BODY BASE + SAFE AREA (CELULAR)
-   ============================================================ */
 body {
     width: 100%;
     min-height: 100dvh;
+    background-color: var(--bg-light);
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
-    overflow-y: auto;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    transition: background 0.5s ease;
+    user-select: none;
 }
 
 /* ============================================================
@@ -34,285 +38,198 @@ body {
 .tema-nivel-3 { background: linear-gradient(135deg, #c084fc, #60a5fa); }
 
 /* ============================================================
-   🎮 CONTAINER PRINCIPAL (CORREÇÃO: TRANSIÇÃO SUAVE)
+   🏗️ ESTRUTURA PRINCIPAL (CONTAINERS)
    ============================================================ */
 .game-container {
     flex: 1;
     width: 100%;
-    max-width: 520px;
+    max-width: 500px;
     margin: 0 auto;
-    padding: 18px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    
-    /* Suavização Total de Entrada e Saída */
-    transition: 
-        opacity 0.35s ease, 
-        transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    justify-content: center;
 }
 
-/* ============================================================
-   🧠 HEADER GLASS (MÁXIMO CONTRASTE)
-   ============================================================ */
-.header-game {
-    width: 100%;
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(18px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.btn-sair {
-    padding: 10px 20px;
-    border-radius: 16px;
-    border: none;
-    background: linear-gradient(145deg, #ef4444, #dc2626);
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-}
-
-#foto-perfil-jogo {
-    width: 46px;
-    height: 46px;
+/* 🖼️ FOTO DO JOGADOR / PERFIL */
+#foto-perfil-jogo, #foto-jogador, .foto-perfil {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    border: 3px solid var(--white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 10px;
 }
 
 /* ============================================================
-   📊 HUD & PROGRESSO (ENERGIA VIVA)
+   📊 HUD (PROGRESSO E SCORE)
    ============================================================ */
 #hud {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 12px 0;
-    padding: 12px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+}
+
+.hud-main-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--primary);
 }
 
 #progressBar {
     width: 100%;
-    height: 22px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 14px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
     overflow: hidden;
     margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 #progressBarFull {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #0ea5e9, #22c55e);
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
-    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    animation: brilhoBarra 2s infinite linear;
-}
-
-@keyframes brilhoBarra {
-    0% { filter: brightness(1); }
-    50% { filter: brightness(1.3); }
-    100% { filter: brightness(1); }
+    background: linear-gradient(90deg, var(--primary), #3b82f6);
+    transition: width 0.4s ease-out;
 }
 
 /* ============================================================
-   ❓ PERGUNTA (DESTAQUE MÁXIMO)
+   ❓ ÁREA DA PERGUNTA
    ============================================================ */
 #question {
-    width: 100%;
+    font-size: 2.2rem;
+    font-weight: 800;
     text-align: center;
-    font-size: 3.2rem;
-    font-weight: 900;
-    padding: 24px;
     margin: 20px 0;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border: 3px solid rgba(255, 255, 255, 0.6);
-    transform: scale(1.05);
-    box-shadow: 
-        0 15px 40px rgba(0, 0, 0, 0.18),
-        inset 0 3px 6px rgba(255, 255, 255, 0.6);
+    padding: 20px;
+    background: var(--white);
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
 /* ============================================================
-   🎯 BOTÕES (CAMADAS E UX CORRIGIDA)
+   🎯 BOTÕES DE RESPOSTA (UX MOBILE)
    ============================================================ */
 .choice-container {
     width: 100%;
-    min-height: 72px;
     display: flex;
     align-items: center;
-    padding: 18px;
-    margin: 12px 0;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: var(--white);
+    margin-bottom: 12px;
+    border-radius: 18px;
+    padding: 15px;
     cursor: pointer;
-    box-shadow: 
-        0 12px 25px rgba(0, 0, 0, 0.18),
-        inset 0 3px 8px rgba(255, 255, 255, 0.6);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* CORREÇÃO: ALINHAMENTO DO BULLET */
-.choice-container::before {
-    content: "";
-    width: 18px;
-    height: 18px;
-    background: #0ea5e9;
-    border-radius: 50%;
-    margin-right: 14px;
-    flex-shrink: 0; /* Impede a bolinha de achatar */
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
-}
-
-.choice-text {
-    font-size: 2.6rem;
-    font-weight: bold;
-}
-
-.choice-container:hover {
-    transform: scale(1.02);
+    border: 3px solid transparent;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .choice-container:active {
-    transform: scale(0.9);
+    transform: scale(0.96);
 }
 
-/* FOCO ACESSÍVEL PROFISSIONAL */
-.choice-container:focus-visible {
-    outline: 3px solid #2563eb;
-    outline-offset: 4px;
+.choice-prefix {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    margin-right: 15px;
 }
 
-/* ============================================================
-   ✅ RESULTADOS (CORREÇÃO: VERMELHO PREMIUM)
-   ============================================================ */
+.choice-text {
+    font-size: 1.8rem;
+    font-weight: 700;
+    flex: 1;
+    text-align: center;
+}
+
 .correto {
-    background: linear-gradient(145deg, #22c55e, #16a34a) !important;
-    color: white !important;
-    box-shadow: 0 0 35px rgba(34, 197, 94, 0.8) !important;
-    transform: scale(1.08) !important;
+    background-color: var(--success) !important;
+    color: var(--white) !important;
 }
 
 .errado {
-    background: linear-gradient(145deg, #f87171, #dc2626) !important;
-    color: white !important;
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6) !important;
+    background-color: var(--error) !important;
+    color: var(--white) !important;
+    animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-8px); }
 }
 
 /* ============================================================
-   🎬 ANIMAÇÕES TÉCNICAS (CORREÇÃO: JUMPEMOJI ADICIONADO)
-   ============================================================ */
-
-/* Animação dos Emojis no Cálculo Visual */
-@keyframes jumpEmoji {
-    0%   { transform: translateY(0); }
-    100% { transform: translateY(-12px); }
-}
-
-/* Efeito de Impacto do Combo */
-@keyframes popCombo {
-    0% { transform: translateX(-50%) scale(0); }
-    80% { transform: translateX(-50%) scale(1.2); }
-    100% { transform: translateX(-50%) scale(1); }
-}
-
-@keyframes entradaPergunta {
-    from { opacity: 0; transform: scale(0.8) translateY(20px); }
-    to { opacity: 1; transform: scale(1.05) translateY(0); }
-}
-
-/* ============================================================
-   📱 RESPONSIVIDADE FINA
-   ============================================================ */
-@media (max-width: 480px) {
-    #question { font-size: 2.3rem; padding: 18px; }
-    .choice-text { font-size: 2.2rem; }
-    .choice-container { min-height: 65px; margin: 8px 0; }
-}
-
-/* ============================================================
-   🧠 CÁLCULO VISUAL (OBJETOS PEDAGÓGICOS TEA)
+   🧠 VISUAL CALCULO (PADRÃO DEFINITIVO PRODUÇÃO)
+   👉 CSS CONTROLA TUDO / POSIÇÃO FIXA NO RODAPÉ MOBILE
    ============================================================ */
 #visual-calculo {
     position: fixed;
+    bottom: 20px;
     left: 50%;
-    top: 55%; /* Centralizado sobre a área de jogo */
-    transform: translate(-50%, -50%);
-    
-    /* Camada Máxima: Acima de HUD e Botões */
-    z-index: 9999999; 
-    
+    transform: translateX(-50%);
+    z-index: 9999;
+
     width: 90%;
-    max-width: 450px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(15px);
-    padding: 30px 20px;
-    border-radius: 35px;
-    border: 6px solid #facc15; /* Amarelo lúdico */
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-    
-    text-align: center;
-    pointer-events: none; /* Não atrapalha o clique se a criança tocar nele */
-    
-    /* Animação de entrada suave */
-    animation: entradaObjeto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+    max-width: 320px;
 
-@keyframes entradaObjeto {
-    from { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 18px;
 
-
-/* ============================================================
-   ✨ MOTOR DE ANIMAÇÃO (OBJETOS PEDAGÓGICOS)
-   ============================================================ */
-@keyframes aparecerObjeto {
-    from {
-        opacity: 0;
-        transform: scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Garante que o container do cálculo visual não quebre o layout mobile */
-#visual-calculo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 15px;
-    min-width: 280px;
-    pointer-events: none; /* Clique atravessa o objeto para não travar o jogo */
-    animation: entradaSuave 0.5s ease-out;
+    gap: 10px;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+    pointer-events: none; /* Não bloqueia cliques no jogo */
+
+    animation: aparecerObjeto 0.3s ease;
 }
 
-@keyframes entradaSuave {
-    from { opacity: 0; transform: translate(-50%, -40%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
+.linha-calculo {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.linha-calculo span {
+    font-size: 2rem;
+}
+
+.sinal-calculo {
+    font-size: 2.4rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+@keyframes aparecerObjeto {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Utilitário */
+.hidden { display: none !important; }
+
+/* 👆 FEEDBACK IMEDIATO AO TOQUE (NÍVEL APP) */
+.choice-container.touch-ativo {
+    transform: scale(0.94);
+    filter: brightness(0.95);
 }

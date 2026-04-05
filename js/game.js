@@ -1,179 +1,237 @@
 /**
- * MOTOR DO JOGO - MUNDO DOS AMIGOS
- * 🔒 REFATORAÇÃO TOTAL - ARQUITETURA SIMPLES E ESTÁVEL
- * FOCO: 1 Ação = 1 Efeito (Sem concorrência)
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (GAME ENGINE)
+ * 🔒 VERSÃO: 2.5.0 - BLINDAGEM DE REFERÊNCIA (ANTI-NULL DATASET)
+ * RESPONSÁVEL: Lead Developer Sênior
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-
+    // --- Seleção de Elementos do DOM ---
     const elPergunta = document.getElementById('question');
-    const botoes = Array.from(document.querySelectorAll(".choice-container"));
     const elScore = document.getElementById('score');
     const elBarra = document.getElementById('progressBarFull');
     const elFase = document.getElementById('progressText');
 
+    // --- Estado Global (Memória de Trabalho) ---
     let fase = 1;
     let score = 0;
-    let respostaCorreta = 0;
-    let bloqueado = false;
-
     let numero1 = 0;
     let numero2 = 0;
-    let emojiAtual = "🐝";
+    let errosSeguidos = 0;
+    let emojiAtual = "🍎";
+    
+    // Semáforos de Controle e Globais de Blindagem
+    window.respostaCorreta = 0;
+    window.__bloqueadoResposta = false;
+    window.modoAjudaAtivo = false;
 
-    const materia = localStorage.getItem("materiaAtual") || "soma";
+    const emojisDestaque = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗"];
 
-    // ===============================
-    // 🔊 VOZ SIMPLES (GATILHO DIRETO)
-    // ===============================
-    function falar(texto) {
-        try {
-            if (!window.speechSynthesis) return;
+    /**
+     * 🔄 FUNÇÃO: proximaPergunta
+     * Reseta estados e gera novo desafio matemático.
+     */
+    function proximaPergunta() { // Inicia nova fase
+        window.__bloqueadoResposta = false;
+        window.modoAjudaAtivo = false;
+        errosSeguidos = 0;
+        limparEmojis();
 
-            // Para tudo antes de falar o novo
-            window.speechSynthesis.cancel();
-
-            const utter = new SpeechSynthesisUtterance(texto);
-            utter.lang = "pt-BR";
-            utter.rate = 0.9;
-            utter.pitch = 1.0;
-
-            window.speechSynthesis.speak(utter);
-
-        } catch (e) {
-            console.warn("Erro voz", e);
-        }
-    }
-
-    // ===============================
-    // 🎨 OBJETO VISUAL (RENDER IMEDIATO)
-    // ===============================
-    function mostrarObjeto() {
-        // Limpa qualquer objeto anterior
-        let antigo = document.getElementById("visual-calculo");
-        if (antigo) antigo.remove();
-
-        const div = document.createElement("div");
-        div.id = "visual-calculo";
-
-        // Estilo centralizado e robusto
-        div.style.cssText = `
-            position:fixed;
-            left:50%;
-            top:50%;
-            transform:translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.98);
-            padding: 30px;
-            border-radius: 30px;
-            z-index: 999999;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            border: 4px solid #f0f0f0;
-            pointer-events: none;
-        `;
-
-        const gerar = (n) => {
-            let html = "";
-            for (let i = 0; i < n; i++) {
-                html += `<span style="font-size:2.8rem; margin:5px; display:inline-block;">${emojiAtual}</span>`;
-            }
-            return html;
-        };
-
-        div.innerHTML = `
-            <div style="margin-bottom:10px">${gerar(numero1)}</div>
-            <div style="font-size:2.5rem; font-weight:bold; color:#555">+</div>
-            <div style="margin-top:10px">${gerar(numero2)}</div>
-        `;
-
-        document.body.appendChild(div);
-
-        // Remove após tempo suficiente para a criança contar
-        setTimeout(() => {
-            if (div.parentNode) div.remove();
-        }, 3000);
-    }
-
-    // ===============================
-    // 🎯 LÓGICA DE PERGUNTA
-    // ===============================
-    function proximaPergunta() {
-        bloqueado = false;
-
-        // Reset visual dos botões
-        botoes.forEach(btn => btn.classList.remove("correto", "errado"));
-
-        // Números simples para base estável
+        // Lógica: 1 a 5 para segurança pedagógica TEA
         numero1 = Math.floor(Math.random() * 5) + 1;
         numero2 = Math.floor(Math.random() * 5) + 1;
-        respostaCorreta = numero1 + numero2;
+        window.respostaCorreta = numero1 + numero2;
+        
+        emojiAtual = emojisDestaque[Math.floor(Math.random() * emojisDestaque.length)];
 
-        elPergunta.innerText = `Quanto é ${numero1} + ${numero2}?`;
+        if (elPergunta) elPergunta.innerText = `Quanto é ${numero1} + ${numero2}?`;
         
         atualizarHUD();
         montarOpcoes();
-        falar(elPergunta.innerText);
+
+        if (typeof falar === "function") {
+            falar(elPergunta.innerText);
+        }
     }
 
-    function atualizarHUD() {
+    /**
+     * 📊 FUNÇÃO: atualizarHUD
+     * Sincroniza barra de progresso e pontos.
+     */
+    function atualizarHUD() { // Atualiza interface de progresso
         if (elScore) elScore.innerText = score;
         if (elFase) elFase.innerText = `Fase ${fase}/30`;
-        if (elBarra) elBarra.style.width = (fase / 30) * 100 + "%";
+        if (elBarra) {
+            const progresso = (fase / 30) * 100;
+            elBarra.style.width = `${progresso}%`;
+        }
     }
 
-    function montarOpcoes() {
-        let opcoes = [respostaCorreta];
-
+    /**
+     * 🎯 FUNÇÃO: montarOpcoes
+     * Configura botões com captura segura de referência para evitar erro de dataset null.
+     */
+    function montarOpcoes() { // Configura alternativas e listeners
+        let opcoes = [window.respostaCorreta];
+        
         while (opcoes.length < 4) {
-            let n = respostaCorreta + (Math.floor(Math.random() * 6) - 3);
-            if (n > 0 && !opcoes.includes(n)) {
-                opcoes.push(n);
-            }
+            let n = window.respostaCorreta + (Math.floor(Math.random() * 6) - 3);
+            if (n > 0 && !opcoes.includes(n)) opcoes.push(n);
         }
-
+        
         opcoes.sort(() => Math.random() - 0.5);
 
+        const botoes = document.querySelectorAll(".choice-container");
         botoes.forEach((btn, i) => {
-            const elTexto = btn.querySelector(".choice-text");
-            if (elTexto) {
-                elTexto.innerText = opcoes[i];
-                btn.onclick = () => verificarResposta(opcoes[i], btn);
-            }
+            const texto = btn.querySelector(".choice-text");
+            if (texto) texto.innerText = opcoes[i];
+            
+            btn.dataset.number = opcoes[i];
+            btn.classList.remove("correto", "errado", "touch-ativo");
+
+            // 👆 LISTENERS HÍBRIDOS (TOQUE PROFISSIONAL FINAL - BLINDADO)
+            btn.onpointerdown = (e) => {
+                if (e.cancelable) e.preventDefault();
+
+                // 🔥 Feedback visual imediato
+                btn.classList.add("touch-ativo");
+
+                // 🔥 CAPTURA SEGURA: Armazena a referência do elemento antes do delay
+                const botaoSeguro = btn;
+
+                setTimeout(() => {
+                    selecionarRespostaDireta(botaoSeguro);
+                }, 50);
+            };
+
+            btn.onpointerup = () => {
+                btn.classList.remove("touch-ativo");
+            };
+
+            btn.onpointerleave = () => {
+                btn.classList.remove("touch-ativo");
+            };
+
+            // Acessibilidade de Teclado
+            btn.onkeydown = (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selecionarRespostaDireta(btn);
+                }
+            };
         });
     }
 
-    // ===============================
-    // 🎯 VALIDAÇÃO (FLUXO LINEAR)
-    // ===============================
-    function verificarResposta(valor, botao) {
-        if (bloqueado) return;
-        bloqueado = true;
+    /**
+     * ⚡ FUNÇÃO: selecionarRespostaDireta
+     * Versão segura que recebe o elemento diretamente, eliminando dependência do 'event'.
+     */
+    function selecionarRespostaDireta(botao) { // Processa resposta com blindagem de referência
+        if (window.modoAjudaAtivo) {
+            fecharAjuda();
+            return;
+        }
 
-        if (valor === respostaCorreta) {
+        if (window.__bloqueadoResposta) return;
+        window.__bloqueadoResposta = true;
+
+        // Validação de segurança para evitar Uncaught TypeError
+        if (!botao || !botao.dataset) {
+            window.__bloqueadoResposta = false;
+            return;
+        }
+
+        const valor = Number(botao.dataset.number);
+        const acertou = valor === window.respostaCorreta;
+
+        if (typeof navigator.vibrate === "function") navigator.vibrate(15);
+
+        if (acertou) {
+            // --- FLUXO DE ACERTO ---
+            botao.classList.add("correto");
             score += 10;
             fase++;
-            botao.classList.add("correto");
-            
-            falar("Muito bem! Você acertou!");
+            errosSeguidos = 0;
+            limparEmojis();
+
+            if (typeof tocarSom === "function") tocarSom('acerto');
+            if (typeof falar === "function") falar("Muito bem! Você acertou!");
 
             setTimeout(() => {
                 proximaPergunta();
             }, 1200);
 
         } else {
+            // --- FLUXO DE ERRO ---
             botao.classList.add("errado");
-            
-            // Ordem: Visual -> Voz -> Reset
-            mostrarObjeto();
-            falar("Tente novamente! Conte os desenhos.");
+            errosSeguidos++;
+
+            if (typeof tocarSom === "function") tocarSom('erro');
+
+            if (errosSeguidos === 1) {
+                if (typeof falar === "function") falar("Quase! Tente novamente.");
+            } else if (errosSeguidos === 2) {
+                mostrarObjeto(); 
+                if (typeof falar === "function") falar("Conte os desenhos.");
+            } else if (errosSeguidos === 3) {
+                if (typeof falar === "function") falar("Tente mais uma vez, você consegue.");
+            } else if (errosSeguidos >= 4) {
+                limparEmojis();
+                if (typeof chamarApoio === "function") chamarApoio();
+            }
 
             setTimeout(() => {
                 botao.classList.remove("errado");
-                bloqueado = false;
-            }, 1500);
+                window.__bloqueadoResposta = false;
+            }, 800);
         }
     }
 
-    // Inicialização
+    /**
+     * 🎨 FUNÇÃO: mostrarObjeto
+     * Injeta auxílio visual sem estilos inline (controlado pelo CSS).
+     */
+    function mostrarObjeto() { // Injeta auxílio visual
+        let antigo = document.getElementById("visual-calculo");
+        if (antigo) antigo.remove();
+
+        window.modoAjudaAtivo = true;
+        const div = document.createElement("div");
+        div.id = "visual-calculo";
+        
+        div.setAttribute("aria-live", "polite");
+        div.setAttribute("role", "status");
+
+        const gerarItens = (qtd) => {
+            let html = "";
+            for (let i = 0; i < qtd; i++) {
+                html += `<span role="img" aria-label="item">${emojiAtual}</span>`;
+            }
+            return html;
+        };
+
+        div.innerHTML = `
+            <div class="linha-calculo">${gerarItens(numero1)}</div>
+            <div class="sinal-calculo">+</div>
+            <div class="linha-calculo">${gerarItens(numero2)}</div>
+        `;
+
+        document.body.appendChild(div);
+    }
+
+    /**
+     * 🧹 FUNÇÕES DE LIMPEZA
+     */
+    function limparEmojis() { // Remove auxílio visual
+        let div = document.getElementById("visual-calculo");
+        if (div) div.remove();
+        window.modoAjudaAtivo = false;
+    }
+
+    function fecharAjuda() { // Fecha ajuda e libera input
+        limparEmojis();
+        window.__bloqueadoResposta = false;
+    }
+
+    // GATILHO INICIAL
     proximaPergunta();
 });
