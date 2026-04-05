@@ -1,63 +1,69 @@
-// ===============================
-// SISTEMA DE APOIO PSICOLÓGICO (TEA)
-// ===============================
+/**
+ * SISTEMA DE APOIO PSICOLÓGICO (TEA)
+ * 🔒 VERSÃO FINAL - ARQUITETURA LIMPA
+ * FOCO: APENAS SUPORTE EMOCIONAL E VOZ
+ */
 
 let apoioAtivo = false;
 let ultimoDisparo = 0;
 
-// ===============================
-// FUNÇÃO PRINCIPAL
-// ===============================
 function verificarApoio(errosSeguidos, perguntaAtual) {
     try {
         const agora = Date.now();
-
-        // evita repetir toda hora
         if (agora - ultimoDisparo < 5000) return;
 
-        if (errosSeguidos >= 3 && !apoioAtivo) {
+        if (errosSeguidos >= 2 && !apoioAtivo) {
             apoioAtivo = true;
             ultimoDisparo = agora;
-
             iniciarApoio(perguntaAtual);
         }
-
     } catch (e) {
         console.error("[APOIO ERRO]", e);
     }
 }
 
-// ===============================
-// INICIAR APOIO
-// ===============================
 function iniciarApoio(pergunta) {
-
     const nome = localStorage.getItem("nomeJogador") || "Amigo";
+    const frases = [
+        `${nome}, tudo bem errar. Vamos com calma.`,
+        `${nome}, você está tentando, isso já é importante.`,
+        `${nome}, pode respirar um pouco. Sem pressa.`,
+        `${nome}, observe com atenção antes de responder.`,
+        `${nome}, tente escolher a opção mais simples primeiro.`,
+        `${nome}, leia novamente, você está perto de acertar.`
+    ];
 
-    // sequência guiada (respiração + acolhimento)
-    falar(`${nome}, vamos com calma...`);
+    const frase1 = frases[Math.floor(Math.random() * frases.length)];
+    const frase2 = frases[Math.floor(Math.random() * frases.length)];
 
-    falar("Respire fundo pelo nariz...", () => {
-        setTimeout(() => {
-            falar("Solte o ar devagar...", () => {
-                setTimeout(() => {
+    // 🎧 FLUXO DE VOZ PURO (Sem controle de objeto)
+    falar(frase1, "dica");
 
-                    falar("Você consegue. Vamos tentar juntos.");
+    setTimeout(() => {
+        falar("Vamos juntos.", "dica");
+    }, 1800);
 
-                    // reforça pergunta novamente
-                    falar(pergunta, () => {
-                        apoioAtivo = false;
-                    });
+    setTimeout(() => {
+        falar(frase2, "dica");
+    }, 3500);
 
-                }, 800);
-            });
-        }, 1200);
-    });
+    setTimeout(() => {
+        falar("Vamos tentar novamente.", "dica");
+    }, 5500);
+
+    setTimeout(() => {
+        falar(pergunta, "dica");
+        apoioAtivo = false;
+    }, 7000);
 }
 
 // ===============================
-// RESET APOIO (quando acerta)
+// 👁 FUNÇÃO: mostrarObjetoDaPergunta (DESATIVADA)
 // ===============================
+function mostrarObjetoDaPergunta(pergunta) {
+    // 🔒 DESATIVADO — controle agora é exclusivo do game.js
+}
+
 function resetarApoio() {
     apoioAtivo = false;
 }

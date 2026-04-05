@@ -251,3 +251,68 @@ body {
     .choice-text { font-size: 2.2rem; }
     .choice-container { min-height: 65px; margin: 8px 0; }
 }
+
+/* ============================================================
+   🧠 CÁLCULO VISUAL (OBJETOS PEDAGÓGICOS TEA)
+   ============================================================ */
+#visual-calculo {
+    position: fixed;
+    left: 50%;
+    top: 55%; /* Centralizado sobre a área de jogo */
+    transform: translate(-50%, -50%);
+    
+    /* Camada Máxima: Acima de HUD e Botões */
+    z-index: 9999999; 
+    
+    width: 90%;
+    max-width: 450px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
+    padding: 30px 20px;
+    border-radius: 35px;
+    border: 6px solid #facc15; /* Amarelo lúdico */
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    
+    text-align: center;
+    pointer-events: none; /* Não atrapalha o clique se a criança tocar nele */
+    
+    /* Animação de entrada suave */
+    animation: entradaObjeto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes entradaObjeto {
+    from { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+
+/* ============================================================
+   ✨ MOTOR DE ANIMAÇÃO (OBJETOS PEDAGÓGICOS)
+   ============================================================ */
+@keyframes aparecerObjeto {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Garante que o container do cálculo visual não quebre o layout mobile */
+#visual-calculo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    min-width: 280px;
+    pointer-events: none; /* Clique atravessa o objeto para não travar o jogo */
+    animation: entradaSuave 0.5s ease-out;
+}
+
+@keyframes entradaSuave {
+    from { opacity: 0; transform: translate(-50%, -40%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
