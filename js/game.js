@@ -1,6 +1,7 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (GAME ENGINE)
- * 🔒 VERSÃO: 3.6.0 - SINCRONIZAÇÃO COMPLETA (ÁUDIO, UX E TEA)
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V11.4.0)
+ * 🔒 VERSÃO FINAL ABSOLUTA: ROBUSTEZ CONTRA LOOP E SINCRONIZAÇÃO AAA
+ * Foco: Estabilidade total, Prevenção de Bugs Críticos e Acessibilidade TEA.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,135 +10,116 @@ document.addEventListener("DOMContentLoaded", () => {
     const elScore = document.getElementById('score');
     const elBarra = document.getElementById('progressBarFull');
     const elFase = document.getElementById('progressText');
-    const areaAjuda = document.getElementById("area-ajuda-visual");
+    const elEstrelas = document.getElementById('estrelas');
+    const containerAjuda = document.getElementById("area-ajuda-visual");
 
-    // --- Estado Global do Jogo ---
+    // --- Estado Global ---
+    let operacao = localStorage.getItem("modoJogo") || "soma";
     let fase = 1;
     let score = 0;
+    let estrelas = parseInt(localStorage.getItem("estrelas")) || 0; 
+    let acertosSeguidos = 0;
     let numero1 = 0;
     let numero2 = 0;
     let errosSeguidos = 0;
     let emojiAtual = "🍎";
+    let ultimaFrase = ""; 
     
-    // Semáforos e Controles Globais
     window.respostaCorreta = 0;
     window.__bloqueadoResposta = false;
-    window.modoAjudaAtivo = false;
-    let musicaFaseAtual = 0; 
 
-    const emojisDestaque = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗"];
+    /**
+     * ⭐ SISTEMA DE RECOMPENSA
+     */
+    function registrarAcerto() {
+        estrelas++;
+        acertosSeguidos++;
+        score += 10;
+        atualizarEstrelasUI();
+
+        if (acertosSeguidos === 3) {
+            estrelas += 2;
+            mostrarPopupBonus("🔥 SEQUÊNCIA INCRÍVEL! +2 ⭐");
+            if (typeof tocarSom === "function") tocarSom('bonus');
+        }
+    }
+
+    function registrarErro() {
+        acertosSeguidos = 0;
+        errosSeguidos++;
+    }
+
+    function atualizarEstrelasUI() {
+        if (elEstrelas) {
+            elEstrelas.innerText = estrelas;
+            elEstrelas.classList.add("acerto-animado");
+            setTimeout(() => elEstrelas.classList.remove("acerto-animado"), 400);
+        }
+    }
+
+    function mostrarPopupBonus(texto) {
+        const div = document.createElement("div");
+        div.innerText = texto;
+        div.className = "fade-in"; 
+        Object.assign(div.style, {
+            position: "fixed", top: "20%", left: "50%", transform: "translateX(-50%)",
+            background: "#4CAF50", color: "#fff", padding: "15px 30px",
+            borderRadius: "20px", fontSize: "20px", fontWeight: "900",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)", zIndex: "10000", pointerEvents: "none"
+        });
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2000);
+    }
 
     /**
      * 🔄 FUNÇÃO: proximaPergunta
-     * Gera o desafio matemático e limpa estados anteriores.
      */
     function proximaPergunta() {
         window.__bloqueadoResposta = false;
-        window.modoAjudaAtivo = false;
         errosSeguidos = 0;
-        limparEmojis();
+        limparEmojisAjuda();
 
-        // Gera números aleatórios (1 a 5 para soma simples)
-        numero1 = Math.floor(Math.random() * 5) + 1;
-        numero2 = Math.floor(Math.random() * 5) + 1;
-        window.respostaCorreta = numero1 + numero2;
-        
-        // Escolhe um emoji aleatório para suporte visual
-        emojiAtual = emojisDestaque[Math.floor(Math.random() * emojisDestaque.length)];
+        let simbolo = "+";
 
-        if (elPergunta) elPergunta.innerText = `Quanto é ${numero1} + ${numero2}?`;
+        if (operacao === "soma") {
+            numero1 = Math.floor(Math.random() * 5) + 1;
+            numero2 = Math.floor(Math.random() * 5) + 1;
+            window.respostaCorreta = numero1 + numero2;
+            simbolo = "+";
+        } 
+        else if (operacao === "subtracao") {
+            numero1 = Math.floor(Math.random() * 9) + 2;
+            numero2 = Math.floor(Math.random() * (numero1 - 1)) + 1;
+            window.respostaCorreta = numero1 - numero2;
+            simbolo = "−";
+        } 
+        else if (operacao === "divisao") {
+            numero2 = Math.floor(Math.random() * 4) + 1;
+            window.respostaCorreta = Math.floor(Math.random() * 5) + 1;
+            numero1 = numero2 * window.respostaCorreta;
+            simbolo = "÷";
+        }
+
+        const listaEmojis = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗", "🧸", "🎈"];
+        emojiAtual = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
+
+        if (elPergunta) {
+            elPergunta.innerText = `Quanto é ${numero1} ${simbolo} ${numero2}?`;
+            elPergunta.classList.remove("fade-in");
+            void elPergunta.offsetWidth;
+            elPergunta.classList.add("fade-in");
+        }
         
         atualizarHUD();
         montarOpcoes();
-        atualizarMusicaPorFase(); 
 
-        // Feedback de Voz (Acessibilidade)
-        if (typeof falar === "function") {
-            falar(elPergunta ? elPergunta.innerText : "Quanto é a soma?");
-        }
+        if (typeof falar === "function") falar(elPergunta.innerText);
     }
 
     /**
-     * 📊 FUNÇÃO: atualizarHUD
-     * Sincroniza a interface visual (pontos e barra de progresso).
-     */
-    function atualizarHUD() {
-        if (elScore) elScore.innerText = score;
-        if (elFase) elFase.innerText = `Fase ${fase}/30`;
-        if (elBarra) {
-            const progresso = (fase / 30) * 100;
-            elBarra.style.width = `${progresso}%`;
-        }
-    }
-
-    /**
-     * 🎵 FUNÇÃO: atualizarMusicaPorFase
-     * Gerencia a troca de trilhas sonoras conforme a evolução do jogador.
-     */
-    function atualizarMusicaPorFase() {
-        let nivelDesejado = 1;
-        if (fase > 10 && fase <= 20) nivelDesejado = 2;
-        if (fase > 20) nivelDesejado = 3;
-
-        if (nivelDesejado !== musicaFaseAtual) {
-            musicaFaseAtual = nivelDesejado;
-            // Comunica a mudança para o sistema de som centralizado
-            if (typeof gerenciarMusicaFundo === "function") {
-                gerenciarMusicaFundo(musicaFaseAtual);
-            }
-        }
-    }
-
-    /**
-     * 🎯 FUNÇÃO: montarOpcoes
-     * Configura os botões de resposta com lógica de alternativas e feedback tátil.
-     */
-    function montarOpcoes() {
-        let opcoes = [window.respostaCorreta];
-        
-        // Gera alternativas próximas à correta para desafio pedagógico
-        while (opcoes.length < 4) {
-            let n = window.respostaCorreta + (Math.floor(Math.random() * 6) - 3);
-            if (n > 0 && !opcoes.includes(n)) opcoes.push(n);
-        }
-        
-        // Embaralha as opções
-        opcoes.sort(() => Math.random() - 0.5);
-
-        const botoes = document.querySelectorAll(".choice-container");
-        botoes.forEach((btn, i) => {
-            const texto = btn.querySelector(".choice-text");
-            if (texto) texto.innerText = opcoes[i];
-            
-            btn.dataset.number = opcoes[i];
-            btn.classList.remove("correto", "errado", "touch-ativo");
-
-            // Evento de toque otimizado (Mobile-First)
-            btn.onpointerdown = (e) => {
-                if (window.__bloqueadoResposta) return;
-                btn.classList.add("touch-ativo");
-                
-                // Delay para percepção visual do clique antes de processar
-                setTimeout(() => {
-                    selecionarRespostaDireta(btn);
-                }, 100);
-            };
-
-            btn.onpointerup = () => btn.classList.remove("touch-ativo");
-            btn.onpointerleave = () => btn.classList.remove("touch-ativo");
-        });
-    }
-
-    /**
-     * ⚡ FUNÇÃO: selecionarRespostaDireta
-     * Lógica principal de processamento de acerto e erro.
+     * 🎯 FUNÇÃO: selecionarRespostaDireta
      */
     function selecionarRespostaDireta(botao) {
-        if (window.modoAjudaAtivo && errosSeguidos >= 2) {
-            // Se a ajuda estiver na tela, o primeiro toque apenas fecha/limpa se necessário
-            // Mas aqui permitimos a resposta direta para fluidez
-        }
-
         if (window.__bloqueadoResposta) return;
         window.__bloqueadoResposta = true;
 
@@ -145,89 +127,155 @@ document.addEventListener("DOMContentLoaded", () => {
         const acertou = valor === window.respostaCorreta;
 
         if (acertou) {
-            botao.classList.add("correto");
-            score += 10;
-            fase++;
+            botao.classList.add("correto", "acerto-animado");
+            registrarAcerto();
+            errosSeguidos = 0; 
 
-            // Disparos Sensoriais
             if (typeof tocarSom === "function") tocarSom('acerto');
-            if (typeof vibrarAcerto === "function") vibrarAcerto();
-
+            
             setTimeout(() => {
-                if (fase > 30) {
-                    localStorage.setItem("mostRecentScore", score);
-                    // Sincronização final com Firebase
-                    if (typeof salvarProgresso === "function") {
-                        const nome = localStorage.getItem("nomeJogador");
-                        salvarProgresso(nome, fase, score);
-                    }
-                    window.location.href = "end.html";
-                } else {
-                    proximaPergunta();
-                }
+                fase++;
+                fase > 30 ? finalizarJogo() : proximaPergunta();
             }, 1500);
 
         } else {
-            botao.classList.add("errado");
-            errosSeguidos++;
+            botao.classList.add("errado", "erro-animado");
+            registrarErro();
 
             if (typeof tocarSom === "function") tocarSom('erro');
-            if (typeof vibrarErro === "function") vibrarErro();
 
-            // Suporte TEA: Ativa contagem visual após 2 erros
-            if (errosSeguidos === 2) {
-                mostrarObjeto(); 
-                if (typeof falar === "function") falar("Conte os desenhos para ajudar.");
+            if (errosSeguidos >= 2) {
+                mostrarAjudaVisual();
+            }
+
+            if (errosSeguidos >= 3) {
+                dispararFraseMotivacional();
             }
 
             setTimeout(() => {
-                botao.classList.remove("errado");
+                botao.classList.remove("errado", "erro-animado");
                 window.__bloqueadoResposta = false;
             }, 800);
         }
     }
 
     /**
-     * 🎨 FUNÇÃO: mostrarObjeto
-     * Injeta suporte visual (frutinhas) na área reservada do layout.
+     * 🎨 FUNÇÃO: mostrarAjudaVisual
      */
-    function mostrarObjeto() {
-        if (!areaAjuda) return;
-
-        window.modoAjudaAtivo = true;
+    function mostrarAjudaVisual() {
+        if (!containerAjuda) return;
         const div = document.createElement("div");
         div.id = "visual-calculo";
-        
-        const gerarItens = (qtd) => {
+
+        const gerarEmojis = (qtd) => {
             let html = "";
             for (let i = 0; i < qtd; i++) {
-                // 🔥 Injeta classe emoji-ajuda para animação CSS
-                html += `<span class="emoji-ajuda" role="img" aria-label="item">${emojiAtual}</span>`;
+                html += `<span class="emoji-ajuda" style="--i:${i}">${emojiAtual}</span>`;
             }
             return html;
         };
 
-        div.innerHTML = `
-            <div class="linha-calculo">${gerarItens(numero1)}</div>
-            <div class="sinal-calculo">+</div>
-            <div class="linha-calculo">${gerarItens(numero2)}</div>
-        `;
+        let htmlFinal = "";
 
-        areaAjuda.innerHTML = ""; // Limpa container
-        areaAjuda.appendChild(div);
+        if (operacao === "soma") {
+            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">+</div><div class="linha-calculo">${gerarEmojis(numero2)}</div>`;
+        } 
+        else if (operacao === "subtracao") {
+            const resultado = numero1 - numero2;
+            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">−</div><div class="linha-calculo">${gerarEmojis(numero2)}</div><div class="sinal-calculo">=</div><div class="linha-calculo">${gerarEmojis(resultado)}</div>`;
+        } 
+        else if (operacao === "divisao") {
+            const resultado = numero1 / numero2;
+            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">÷</div><div class="linha-calculo">${gerarEmojis(numero2)}</div><div class="sinal-calculo">=</div><div class="linha-calculo">${gerarEmojis(resultado)}</div>`;
+        }
+
+        div.innerHTML = htmlFinal;
+        Object.assign(div.style, { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", width: "100%", animation: "bounceIn 0.5s ease" });
+        containerAjuda.innerHTML = "";
+        containerAjuda.appendChild(div);
     }
 
     /**
-     * 🧹 FUNÇÃO: limparEmojis
-     * Remove a ajuda visual do fluxo do documento.
+     * ❤️ FUNÇÃO: dispararFraseMotivacional (VERSÃO BLINDADA)
      */
-    function limparEmojis() {
-        if (areaAjuda) {
-            areaAjuda.innerHTML = "";
+    function dispararFraseMotivacional() {
+        if (!window._ultimoApoioTempo) window._ultimoApoioTempo = 0;
+        const agora = Date.now();
+        if (agora - window._ultimoApoioTempo < 6000) return;
+        window._ultimoApoioTempo = agora;
+
+        const frases = [
+            "Tudo bem errar, faz parte de aprender. Você está indo bem.",
+            "Respire fundo, com calma você consegue tentar de novo.",
+            "Cada tentativa é um passo à frente, continue assim.",
+            "Você é capaz, só precisa de um pouquinho de calma.",
+            "Não tem problema errar, vamos tentar juntos mais uma vez.",
+            "Devagar e com atenção, você consegue resolver.",
+            "Está tudo bem parar um segundo e respirar.",
+            "Você já conseguiu antes, pode conseguir de novo.",
+            "Errar é só parte do caminho, continue tentando.",
+            "Respire, pense com calma e tente mais uma vez.",
+            "Você está aprendendo, isso é o mais importante.",
+            "Não precisa ter pressa, vá no seu ritmo.",
+            "Está indo bem, continue tentando com calma.",
+            "Se ficar difícil, peça ajuda, tudo bem.",
+            "Você é inteligente, confie em você.",
+            "Vamos tentar juntos mais uma vez, com calma.",
+            "Respire fundo, você consegue dar o próximo passo.",
+            "Tudo bem descansar um pouco e depois tentar de novo.",
+            "Cada erro ensina algo novo, continue.",
+            "Você está fazendo um bom trabalho, não desista."
+        ];
+
+        let fraseEscolhida;
+        
+        // 🔒 Proteção contra loop infinito se houver apenas 1 frase
+        if (frases.length > 1) {
+            do {
+                fraseEscolhida = frases[Math.floor(Math.random() * frases.length)];
+            } while (fraseEscolhida === ultimaFrase);
+        } else {
+            fraseEscolhida = frases[0];
         }
-        window.modoAjudaAtivo = false;
+
+        ultimaFrase = fraseEscolhida;
+
+        setTimeout(() => {
+            if (typeof falar === "function") falar(fraseEscolhida, "dica");
+        }, 500);
     }
 
-    // --- INICIALIZAÇÃO DO MOTOR ---
+    function limparEmojisAjuda() { if (containerAjuda) containerAjuda.innerHTML = ""; }
+
+    function atualizarHUD() {
+        if (elScore) elScore.innerText = score;
+        if (elFase) elFase.innerText = `Fase ${fase}/30`;
+        if (elBarra) elBarra.style.width = `${(fase / 30) * 100}%`;
+        atualizarEstrelasUI();
+    }
+
+    function montarOpcoes() {
+        let opcoes = [window.respostaCorreta];
+        while (opcoes.length < 4) {
+            let n = window.respostaCorreta + (Math.floor(Math.random() * 6) - 3);
+            if (n >= 0 && !opcoes.includes(n)) opcoes.push(n);
+        }
+        opcoes.sort(() => Math.random() - 0.5);
+        const botoes = document.querySelectorAll(".choice-container");
+        botoes.forEach((btn, i) => {
+            const textoEl = btn.querySelector(".choice-text");
+            if (textoEl) textoEl.innerText = opcoes[i];
+            btn.dataset.number = opcoes[i];
+            btn.classList.remove("correto", "errado", "acerto-animado", "erro-animado");
+            btn.onpointerdown = () => selecionarRespostaDireta(btn);
+        });
+    }
+
+    function finalizarJogo() {
+        localStorage.setItem("mostRecentScore", score);
+        localStorage.setItem("estrelas", estrelas);
+        window.location.href = "end.html";
+    }
+
     proximaPergunta();
 });

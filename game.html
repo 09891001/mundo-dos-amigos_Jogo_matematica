@@ -8,87 +8,82 @@
 </head>
 <body class="tema-nivel-1">
 
-    <button id="ativarAudioGame" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        z-index: 9999;
-        border: none;
-        background: transparent;
-    "></button>
+    <button id="ativarAudio" aria-label="Ativar som do jogo"></button>
 
     <header class="header-game">
-        <button class="btn-sair" id="btnSair">Sair</button>
-        <img id="foto-perfil-jogo" src="img/avatar-padrao.png" alt="Foto do jogador">
+        <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
+        <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto do jogador" class="foto-perfil-hud">
     </header>
 
-    <main class="game-container">
+    <main class="container">
         <section id="hud">
-            <p id="progressText">Fase 1/30</p>
-            <p>Pontos: <span id="score">0</span></p>
+            <div class="hud-item">
+                <p id="progressText">Fase 1/30</p>
+                <div id="progressBar">
+                    <div id="progressBarFull"></div>
+                </div>
+            </div>
+            <div class="hud-item">
+                <p>Pontos: <span id="score">0</span></p>
+                <p>⭐ <span id="estrelas">0</span></p>
+            </div>
         </section>
-
-        <div id="progressBar">
-            <div id="progressBarFull"></div>
-        </div>
 
         <h2 id="question">Carregando...</h2>
 
-        <section id="game" class="flex-center flex-column">
-            <div class="choice-container" data-number="0">
+        <section id="area-ajuda-visual" aria-live="polite">
+            </section>
+
+        <section id="game" class="choices-grid">
+            <div class="choice-container" data-number="0" role="button" tabindex="0">
                 <p class="choice-text">0</p>
             </div>
-            <div class="choice-container" data-number="0">
+            <div class="choice-container" data-number="0" role="button" tabindex="0">
                 <p class="choice-text">0</p>
             </div>
-            <div class="choice-container" data-number="0">
+            <div class="choice-container" data-number="0" role="button" tabindex="0">
                 <p class="choice-text">0</p>
             </div>
-            <div class="choice-container" data-number="0">
+            <div class="choice-container" data-number="0" role="button" tabindex="0">
                 <p class="choice-text">0</p>
             </div>
         </section>
     </main>
 
-    <script src="js/preload.js"></script>
-    <script src="js/voz.js"></script>
     <script src="js/sons.js"></script>
-    <script src="js/vibracao.js"></script>
+    <script src="js/voz.js"></script>
     <script src="js/game.js"></script>
 
     <script>
-        // 1. DESBLOQUEIO TÁTIL (Obrigatório para iOS/Safari)
-        const btnAudioGame = document.getElementById("ativarAudioGame");
-
-        if (btnAudioGame) {
-            btnAudioGame.addEventListener("click", () => {
-                // Libera o hardware de áudio e sintetizador de voz
-                if (typeof liberarAudio === "function") liberarAudio();
-                if (typeof liberarVoz === "function") liberarVoz();
-
-                // Remove a camada para permitir interação com o jogo abaixo
-                btnAudioGame.remove();
-                console.log("[SISTEMA]: Áudio desbloqueado pelo usuário.");
-            });
-        }
-
-        // 2. INTERFACE E NAVEGAÇÃO
+        /**
+         * AJUSTES DE INTERFACE ESPECÍFICOS DA PÁGINA
+         */
         document.addEventListener("DOMContentLoaded", () => {
             const btnSair = document.getElementById("btnSair");
-            const foto = document.getElementById("foto-perfil-jogo");
+            const fotoHud = document.getElementById("foto-jogador");
+            const btnAudio = document.getElementById("ativarAudio");
 
-            // Recupera foto do perfil
+            // 1. Desbloqueio de áudio por interação
+            if (btnAudio) {
+                btnAudio.addEventListener("click", () => {
+                    if (typeof liberarAudio === "function") liberarAudio();
+                    if (typeof liberarVoz === "function") liberarVoz();
+                    
+                    btnAudio.remove();
+                    console.log("[SISTEMA]: Áudio em jogo liberado.");
+                });
+            }
+
+            // 2. Carregar foto do perfil salva
             const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            if (foto) foto.src = fotoSalva;
+            if (fotoHud) fotoHud.src = fotoSalva;
 
+            // 3. Controle do botão Sair
             if (btnSair) {
                 btnSair.addEventListener("click", () => {
-                    // Toca som de saída se disponível e volta para o menu
-                    if (typeof tocarSom === "function") tocarSom('sair');
-                    setTimeout(() => window.location.href = "index.html", 300);
+                    if (confirm("Deseja mesmo sair? Seu progresso atual não será salvo.")) {
+                        window.location.href = "index.html";
+                    }
                 });
             }
         });

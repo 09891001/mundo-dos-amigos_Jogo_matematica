@@ -8,17 +8,7 @@
 </head>
 <body>
 
-    <button id="ativarAudio" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        z-index: 9999;
-        border: none;
-        background: transparent;
-    "></button>
+    <button id="ativarAudio" aria-label="Ativar som do jogo"></button>
 
     <main class="container">
         <div 
@@ -30,7 +20,7 @@
             <img 
                 id="foto-jogador" 
                 src="img/avatar-padrao.png" 
-                alt="Foto do jogador"
+                alt="Sua foto de perfil"
             >
             <p>Toque na foto para mudar</p>
             <input 
@@ -41,28 +31,28 @@
             >
         </div>
 
-        <h1>Olá!</h1>
+        <h1>Olá Amigo!</h1>
 
         <input 
             type="text" 
             id="nomeJogador" 
-            placeholder="Digite seu nome..." 
+            placeholder="Qual o seu nome?" 
+            maxlength="15"
             autocomplete="off"
             aria-label="Digite seu nome"
         >
 
-        <div class="menu-materias" role="navigation" aria-label="Escolha a matéria">
-            <button class="btn" data-materia="soma">SOMA (+)</button>
+        <nav class="menu-materias" role="navigation" aria-label="Escolha uma operação">
+            <button class="btn btn-destaque" data-materia="soma">SOMA (+)</button>
             <button class="btn" data-materia="subtracao">SUBTRAÇÃO (-)</button>
             <button class="btn" data-materia="divisao">DIVISÃO (÷)</button>
-        </div>
+        </nav>
     </main>
 
     <script src="js/sons.js"></script>
     <script src="js/voz.js"></script>
 
     <script>
-        // 1. Elementos do DOM
         const btnAudio = document.getElementById("ativarAudio");
         const inputFoto = document.getElementById("inputFoto");
         const fotoJogador = document.getElementById("foto-jogador");
@@ -70,20 +60,22 @@
         const inputNome = document.getElementById("nomeJogador");
         const botoes = document.querySelectorAll(".btn");
 
-        // 2. 🔥 Desbloqueio de Áudio/Voz (Gatilho Limpo)
+        // 1. DESBLOQUEIO DE HARDWARE DE ÁUDIO
         btnAudio.addEventListener("click", () => {
+            // Libera o contexto de áudio e síntese de voz do navegador
             if (typeof liberarAudio === "function") liberarAudio();
             if (typeof liberarVoz === "function") liberarVoz();
-
+            
+            // Inicia trilha sonora se disponível
             if (typeof gerenciarMusicaFundo === "function") {
                 gerenciarMusicaFundo("home");
             }
 
-            btnAudio.remove();
-            console.log("[SISTEMA]: Hardware liberado.");
+            btnAudio.remove(); // Remove o bloqueador após o primeiro toque
+            console.log("[SISTEMA]: Áudio e Voz liberados.");
         });
 
-        // 3. Gerenciamento de Perfil (Foto)
+        // 2. GESTÃO DA FOTO DE PERFIL
         perfilContainer.addEventListener("click", () => inputFoto.click());
 
         inputFoto.addEventListener("change", (e) => {
@@ -99,47 +91,58 @@
             }
         });
 
-        // Restaurar foto salva
+        // Recupera a foto salva anteriormente
         const fotoSalva = localStorage.getItem("fotoJogador");
-        if (fotoSalva) fotoJogador.src = fotoSalva;
-
-        // 4. Lógica de Início de Jogo
-        function nomeValido(nome) {
-            return nome && nome.trim().length >= 2;
+        if (fotoSalva) {
+            fotoJogador.src = fotoSalva;
         }
 
+        // 3. FUNÇÃO DE INÍCIO DO JOGO (COM MODO DINÂMICO)
         function iniciar(materia) {
             const nome = inputNome.value.trim();
-
-            if (!nomeValido(nome)) {
-                alert("Digite um nome válido!");
+            
+            // Validação mínima de nome
+            if (nome.length < 2) {
+                alert("Por favor, digite seu nome para começar a aventura!");
                 return;
             }
 
+            // SALVAMENTO DE DADOS PARA O MOTOR DO JOGO (GAME.JS)
             localStorage.setItem("nomeJogador", nome);
-            localStorage.setItem("materiaAtual", materia);
+            localStorage.setItem("modoJogo", materia); // Sincronizado com a engine unificada
 
+            // Garante que haja uma foto padrão caso nenhuma tenha sido escolhida
             if (!localStorage.getItem("fotoJogador")) {
                 localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
             }
 
+            // Feedback por voz personalizado
             if (typeof falar === "function") {
-                falar(`Olá ${nome}, vamos jogar ${materia}`);
+                falar(`Olá ${nome}, vamos jogar ${materia}!`);
             }
 
+            // Desabilita botões para evitar cliques múltiplos durante a transição
             botoes.forEach(b => b.disabled = true);
 
+            // Pequeno atraso para o áudio da voz ser processado antes da troca de página
             setTimeout(() => {
                 window.location.href = "game.html";
-            }, 800);
+            }, 1000);
         }
 
+        // 4. ATRIBUIÇÃO DE EVENTOS AOS BOTÕES DO MENU
         botoes.forEach(btn => {
             btn.addEventListener("click", () => {
-                const materia = btn.getAttribute("data-materia");
-                iniciar(materia);
+                const materiaSelecionada = btn.getAttribute("data-materia");
+                iniciar(materiaSelecionada);
             });
         });
+
+        // Recupera o nome salvo anteriormente para facilitar o retorno
+        const nomeSalvo = localStorage.getItem("nomeJogador");
+        if (nomeSalvo) {
+            inputNome.value = nomeSalvo;
+        }
     </script>
 </body>
 </html>
