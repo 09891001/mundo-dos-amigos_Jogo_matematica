@@ -1,20 +1,22 @@
-/**
- * FEEDBACK TÁTIL: Vibra o celular do jogador
- */
+// 🔇 SISTEMA DE VIBRAÇÃO SILENCIADO (COMPATÍVEL COM TODOS OS DISPOSITIVOS)
+
 function vibrarAcerto() {
-    console.log("[VIBRAÇÃO]: Sucesso detectado.");
-    if (navigator.vibrate) {
-        // Uma vibração firme de 200 milissegundos
-        navigator.vibrate(200);
+    // Só executa se o dispositivo realmente suportar vibração
+    if (!navigator.vibrate) return;
+
+    try {
+        navigator.vibrate(100);
+    } catch (e) {
+        // 🔇 silêncio total (não polui console)
     }
 }
 
-
-
 function vibrarErro() {
-    console.log("[VIBRAÇÃO]: Erro detectado.");
-    if (navigator.vibrate) {
-        // Duas vibrações curtas para sinalizar atenção
+    if (!navigator.vibrate) return;
+
+    try {
         navigator.vibrate([100, 50, 100]);
+    } catch (e) {
+        // 🔇 silêncio total
     }
 }

@@ -2,150 +2,80 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-
-    <!-- RESPONSIVO ACESSÍVEL -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Mundo dos Amigos - Parabéns!</title>
-
-    <link rel="stylesheet" href="css/app.css">
-
-    <style>
-        .celebracao-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
-            text-align: center;
-        }
-
-        .coroa-img {
-            width: 150px;
-            margin-bottom: 20px;
-            animation: flutuar 2s infinite ease-in-out;
-        }
-
-        @keyframes flutuar {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .nome-vencedor {
-            font-size: 2.5rem;
-            color: #0369a1;
-            margin: 10px 0;
-        }
-
-        .btn-voltar {
-            width: 80%;
-            padding: 25px;
-            background-color: #0ea5e9;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 30px;
-            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
-            cursor: pointer;
-        }
-
-        .btn-voltar:active {
-            transform: scale(0.96);
-        }
-    </style>
+    <title>Mundo dos Amigos - Fim de Jogo</title>
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/highscores.css">
 </head>
-
 <body>
+    <div class="container flex-center flex-column">
+        <main id="end" class="flex-center flex-column">
+            <h1 id="finalScore">0</h1>
+            <p>Parabéns! Você completou o desafio!</p>
+            
+            <div class="avatar-final-container">
+                <img id="foto-final" src="img/avatar-padrao.png" alt="Avatar do Jogador">
+                <h2 id="nome-final">Jogador</h2>
+            </div>
 
-<div class="celebracao-container">
+            <div class="menu-final">
+                <button class="btn" id="btnReiniciar">Jogar Novamente</button>
+                <button class="btn" id="btnHome">Menu Inicial</button>
+            </div>
+        </main>
+    </div>
 
-    <!-- IMAGEM -->
-    <img 
-        src="img/coroa.png" 
-        class="coroa-img" 
-        alt="Coroa de mestre conquistada"
-    >
+    <!-- Firebase SDKs (Versão 8 para compatibilidade) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- Scripts de Lógica -->
+    <script src="js/firebase.js"></script>
+    <script src="js/voz.js"></script>
+    <script src="js/sons.js"></script>
 
-    <!-- TÍTULO -->
-    <h1 style="font-size: 1.5rem; color: #64748b;">
-        VOCÊ CONSEGUIU!
-    </h1>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const finalScoreElement = document.getElementById("finalScore");
+            const nomeFinalElement = document.getElementById("nome-final");
+            const fotoFinalElement = document.getElementById("foto-final");
+            const btnReiniciar = document.getElementById("btnReiniciar");
+            const btnHome = document.getElementById("btnHome");
 
-    <!-- NOME -->
-    <h2 
-        id="nomeDisplay" 
-        class="nome-vencedor"
-        aria-live="polite"
-    >
-        Jogador
-    </h2>
+            // 1. RECUPERAR DADOS DO LOCALSTORAGE
+            const mostRecentScore = localStorage.getItem("mostRecentScore") || 0;
+            const nomeUsuario = localStorage.getItem("nomeJogador") || "Amigo";
+            const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
+            const materia = localStorage.getItem("materiaAtual") || "Soma";
 
-    <!-- SCORE -->
-    <p style="font-size: 1.2rem;">
-        Pontuação Final: 
-        <span id="scoreFinal" style="font-weight: bold;">
-            0
-        </span>
-    </p>
+            // 2. ATUALIZAR INTERFACE
+            finalScoreElement.innerText = mostRecentScore;
+            nomeFinalElement.innerText = nomeUsuario;
+            fotoFinalElement.src = fotoSalva;
 
-    <!-- BOTÃO -->
-    <button 
-        class="btn-voltar" 
-        onclick="jogarNovamente()"
-        aria-label="Jogar novamente"
-    >
-        JOGAR NOVAMENTE
-    </button>
+            // 3. SALVAMENTO FINAL NO FIREBASE (Backup de Segurança)
+            if (typeof salvarProgresso === "function") {
+                // Salva o score final como fase 30 (Concluído)
+                salvarProgresso(nomeUsuario, 30, parseInt(mostRecentScore));
+                console.log("[SISTEMA]: Score final sincronizado com Firebase.");
+            }
 
-</div>
+            // 4. FEEDBACK DE VOZ
+            if (typeof falar === "function") {
+                falar(`Parabéns ${nomeUsuario}! Você fez ${mostRecentScore} pontos em ${materia}!`);
+            }
 
-<!-- VOZ PADRÃO -->
-<script src="js/voz.js"></script>
+            // 5. NAVEGAÇÃO
+            btnReiniciar.onclick = () => {
+                if (typeof tocarSom === "function") tocarSom('clique');
+                window.location.href = "game.html";
+            };
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    const nome = localStorage.getItem("nomeJogador") || "Amigo";
-    const score = localStorage.getItem("mostRecentScore") || 0;
-
-    const elNome = document.getElementById("nomeDisplay");
-    const elScore = document.getElementById("scoreFinal");
-
-    // ===============================
-    // ATUALIZA UI
-    // ===============================
-    if (elNome) elNome.innerText = nome;
-    if (elScore) elScore.innerText = score;
-
-    // ===============================
-    // NARRAÇÃO FINAL (CORRETA)
-    // ===============================
-    if (typeof falar === "function") {
-        setTimeout(() => {
-            falar(`Parabéns ${nome}! Você é um mestre da matemática!`, "festa");
-        }, 300);
-    }
-
-});
-
-/**
- * VOLTAR AO INÍCIO
- */
-function jogarNovamente() {
-    try {
-        if (typeof tocarSom === "function") {
-            tocarSom('home');
-        }
-    } catch {}
-
-    setTimeout(() => {
-        window.location.href = "index.html";
-    }, 300);
-}
-</script>
-
+            btnHome.onclick = () => {
+                if (typeof tocarSom === "function") tocarSom('sair');
+                window.location.href = "index.html";
+            };
+        });
+    </script>
 </body>
 </html>
