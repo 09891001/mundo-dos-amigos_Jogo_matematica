@@ -1,7 +1,7 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V12.6.0)
- * 🔒 VERSÃO FINAL: SINCRONIZAÇÃO DE VOZ REFINADA + AJUDA TEA
- * Foco: Evitar sobreposição de áudio (Overlap Fix) e garantir clareza pedagógica.
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V12.9.0)
+ * 🔒 VERSÃO FINAL: CONTAGEM COM PAUSA ENTRE GRUPOS (ELITE TEA)
+ * Foco: Espaçamento cognitivo, didática aritmética e suporte terapêutico.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🎯 FUNÇÃO: selecionarRespostaDireta (COM PERSONALIZAÇÃO POR NOME)
+     * 🎯 FUNÇÃO: selecionarRespostaDireta
      */
     function selecionarRespostaDireta(botao) {
         if (window.__bloqueadoResposta) return;
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🎨 FUNÇÃO: mostrarAjudaVisual (SEQUÊNCIA DE VOZ REFINADA)
+     * 🎨 FUNÇÃO: mostrarAjudaVisual (CONTAGEM COM PAUSA ENTRE GRUPOS - PERFEITO TEA)
      */
     function mostrarAjudaVisual() {
         if (!containerAjuda) return;
@@ -211,14 +211,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const nomeObjeto = mapaObjetos[emojiAtual] || "itens";
 
+        // Controle de delay global para sincronia rítmica
+        let delayGlobal = 0;
+
         const gerarEmojis = (qtd) => {
             let html = "";
             for (let i = 0; i < qtd; i++) {
                 html += `
-                    <span class="emoji-ajuda destaque-contagem" style="--i:${i}">
+                    <span class="emoji-ajuda contagem-sequencial" style="--delay:${delayGlobal}s">
                         ${emojiAtual}
                     </span>
                 `;
+                delayGlobal += 0.4;
             }
             return html;
         };
@@ -226,30 +230,46 @@ document.addEventListener("DOMContentLoaded", () => {
         let htmlFinal = "";
 
         if (operacao === "soma") {
+            const grupo1 = gerarEmojis(numero1);
+            delayGlobal += 1.0; // 🔥 PAUSA ESTRUTURAL ENTRE GRUPOS
+            const grupo2 = gerarEmojis(numero2);
+
             htmlFinal = `
-                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="linha-calculo">${grupo1}</div>
                 <div class="sinal-calculo">+</div>
-                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+                <div class="linha-calculo">${grupo2}</div>
             `;
         } 
         else if (operacao === "subtracao") {
             const resultado = numero1 - numero2;
+            const grupo1 = gerarEmojis(numero1);
+            delayGlobal += 1.0;
+            const grupo2 = gerarEmojis(numero2);
+            delayGlobal += 1.0;
+            const grupoResultado = gerarEmojis(resultado);
+
             htmlFinal = `
-                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="linha-calculo">${grupo1}</div>
                 <div class="sinal-calculo">−</div>
-                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+                <div class="linha-calculo">${grupo2}</div>
                 <div class="sinal-calculo">=</div>
-                <div class="linha-calculo">${gerarEmojis(resultado)}</div>
+                <div class="linha-calculo">${grupoResultado}</div>
             `;
         } 
         else if (operacao === "divisao") {
             const resultado = numero1 / numero2;
+            const grupo1 = gerarEmojis(numero1);
+            delayGlobal += 1.0;
+            const grupo2 = gerarEmojis(numero2);
+            delayGlobal += 1.0;
+            const grupoResultado = gerarEmojis(resultado);
+
             htmlFinal = `
-                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="linha-calculo">${grupo1}</div>
                 <div class="sinal-calculo">÷</div>
-                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+                <div class="linha-calculo">${grupo2}</div>
                 <div class="sinal-calculo">=</div>
-                <div class="linha-calculo">${gerarEmojis(resultado)}</div>
+                <div class="linha-calculo">${grupoResultado}</div>
             `;
         }
 
@@ -264,10 +284,9 @@ document.addEventListener("DOMContentLoaded", () => {
         containerAjuda.innerHTML = "";
         containerAjuda.appendChild(div);
 
-        // 🔊 CORREÇÃO: Delay de 1200ms para evitar sobreposição com a frase de erro
         setTimeout(() => {
             if (typeof falar === "function") {
-                falar(`${nome}, agora preste atenção. Conte os ${nomeObjeto} que estão aparecendo na tela para te ajudar.`);
+                falar(`${nome}, conte os ${nomeObjeto} na tela.`);
             }
         }, 1200);
     }
