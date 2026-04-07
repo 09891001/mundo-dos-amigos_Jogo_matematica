@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mundo dos Amigos - Início</title>
-    <link rel="stylesheet" href="css/game.css">
+        <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
 
@@ -52,8 +52,8 @@
 
     <script>
         /**
-         * 1. DESBLOQUEIO DE ÁUDIO PADRONIZADO (FIX MOBILE)
-         * Substitui o antigo botão invisível pelo toque em qualquer lugar da tela.
+         * 1. DESBLOQUEIO DE ÁUDIO PADRONIZADO
+         * Ativa o sistema de som no primeiro toque do usuário.
          */
         document.addEventListener("pointerdown", () => {
             if (typeof liberarAudio === "function") liberarAudio();
@@ -62,10 +62,9 @@
             if (typeof gerenciarMusicaFundo === "function") {
                 gerenciarMusicaFundo("home");
             }
-            console.log("[SISTEMA]: Áudio e Trilha 'Home' desbloqueados pelo toque.");
         }, { once: true });
 
-        // --- Lógica de Interface da Home ---
+        // --- Seleção de Elementos ---
         const inputFoto = document.getElementById("inputFoto");
         const fotoJogador = document.getElementById("foto-jogador");
         const perfilContainer = document.getElementById("perfil-container");
@@ -89,12 +88,25 @@
             }
         });
 
-        // 3. INICIALIZAÇÃO DO JOGO
+        /**
+         * 3. INICIALIZAÇÃO DO JOGO (FUNÇÃO CORRIGIDA V12.0)
+         * Padroniza o nome (ex: "joão" -> "João") e alinha fallbacks.
+         */
         function iniciar(materia) {
-            const nome = inputNome.value.trim() || "Amigo";
-            
+            let nomeRaw = inputNome.value.trim();
+            let nome;
+
+            // 🔒 Fallback padrão alinhado com game.js
+            if (!nomeRaw) {
+                nome = "Jogador";
+            } else {
+                // 🔥 Padronização: Primeira Letra Maiúscula, demais minúsculas
+                nome = nomeRaw.charAt(0).toUpperCase() + nomeRaw.slice(1).toLowerCase();
+            }
+
             if (typeof tocarSom === "function") tocarSom('clique');
 
+            // Persistência de dados
             localStorage.setItem("nomeJogador", nome);
             localStorage.setItem("modoJogo", materia);
 
@@ -102,10 +114,12 @@
                 localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
             }
 
+            // Feedback por voz
             if (typeof falar === "function") {
                 falar(`Olá ${nome}, vamos jogar ${materia}!`);
             }
 
+            // UI Feedback
             botoes.forEach(b => b.disabled = true);
 
             setTimeout(() => {
@@ -113,6 +127,7 @@
             }, 1000);
         }
 
+        // 4. ATRIBUIÇÃO DE EVENTOS
         botoes.forEach(btn => {
             btn.addEventListener("click", () => {
                 const materiaSelecionada = btn.getAttribute("data-materia");
@@ -120,7 +135,7 @@
             });
         });
 
-        // Recuperar nome salvo
+        // 5. RECUPERAÇÃO DE ESTADO (RETORNO DO JOGADOR)
         const nomeSalvo = localStorage.getItem("nomeJogador");
         if (nomeSalvo) {
             inputNome.value = nomeSalvo;

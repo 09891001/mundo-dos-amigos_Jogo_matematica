@@ -1,7 +1,7 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V11.5.0)
- * 🔒 VERSÃO FINAL ABSOLUTA: GARANTIA DE TRILHA SONORA ATIVA
- * Foco: Estabilidade total, Sincronização de Áudio Mobile e Acessibilidade TEA.
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V12.6.0)
+ * 🔒 VERSÃO FINAL: SINCRONIZAÇÃO DE VOZ REFINADA + AJUDA TEA
+ * Foco: Evitar sobreposição de áudio (Overlap Fix) e garantir clareza pedagógica.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let numero2 = 0;
     let errosSeguidos = 0;
     let emojiAtual = "🍎";
-    let ultimaFrase = ""; 
+    let ultimaFraseApoio = ""; 
     
     window.respostaCorreta = 0;
     window.__bloqueadoResposta = false;
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🔄 FUNÇÃO: proximaPergunta (FIX: GARANTIR MÚSICA ATIVA)
+     * 🔄 FUNÇÃO: proximaPergunta
      */
     function proximaPergunta() {
         window.__bloqueadoResposta = false;
@@ -100,12 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
             simbolo = "÷";
         }
 
-        // 🔥 GARANTE MÚSICA DE FUNDO ATIVA NO INÍCIO DO JOGO
         if (typeof gerenciarMusicaFundo === "function") {
             gerenciarMusicaFundo(1);
         }
 
-        const listaEmojis = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗", "🧸", "🎈"];
+        const listaEmojis = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗", "🧸", "🎈", "❤️", "🐝"];
         emojiAtual = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
 
         if (elPergunta) {
@@ -122,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🎯 FUNÇÃO: selecionarRespostaDireta
+     * 🎯 FUNÇÃO: selecionarRespostaDireta (COM PERSONALIZAÇÃO POR NOME)
      */
     function selecionarRespostaDireta(botao) {
         if (window.__bloqueadoResposta) return;
@@ -130,14 +129,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const valor = Number(botao.dataset.number);
         const acertou = valor === window.respostaCorreta;
+        const nome = localStorage.getItem("nomeJogador") || "Jogador";
+
+        const frasesAcerto = [
+            `${nome}, você acertou! Vamos continuar!`,
+            `${nome}, muito bem! Você é inteligente! Próxima fase!`,
+            `${nome}, isso mesmo! Mandou muito bem!`,
+            `${nome}, perfeito! Continue assim!`,
+            `${nome}, você está arrasando! Vamos para a próxima!`,
+            `${nome}, incrível! Você acertou de primeira!`,
+            `${nome}, parabéns! Você está indo muito bem!`,
+            `${nome}, excelente! Continue focado!`
+        ];
+
+        const frasesErro = [
+            `${nome}, você errou, mas tudo bem. Vamos tentar de novo.`,
+            `${nome}, não foi dessa vez, mas você consegue.`,
+            `${nome}, resposta errada, tente novamente com calma.`,
+            `${nome}, quase! Você é inteligente, vamos tentar outra vez.`,
+            `${nome}, errou, mas está aprendendo. Continue.`,
+            `${nome}, não acertou agora, mas vai conseguir.`,
+            `${nome}, calma, você consegue acertar na próxima.`,
+            `${nome}, tente novamente, você é capaz.`
+        ];
 
         if (acertou) {
             botao.classList.add("correto", "acerto-animado");
             registrarAcerto();
-            errosSeguidos = 0; 
+            errosSeguidos = 0;
 
             if (typeof tocarSom === "function") tocarSom('acerto');
-            
+
+            const frase = frasesAcerto[Math.floor(Math.random() * frasesAcerto.length)];
+            if (typeof falar === "function") falar(frase);
+
             setTimeout(() => {
                 fase++;
                 fase > 30 ? finalizarJogo() : proximaPergunta();
@@ -148,6 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
             registrarErro();
 
             if (typeof tocarSom === "function") tocarSom('erro');
+
+            const frase = frasesErro[Math.floor(Math.random() * frasesErro.length)];
+            if (typeof falar === "function") falar(frase);
 
             if (errosSeguidos >= 2) {
                 mostrarAjudaVisual();
@@ -165,17 +193,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🎨 FUNÇÃO: mostrarAjudaVisual
+     * 🎨 FUNÇÃO: mostrarAjudaVisual (SEQUÊNCIA DE VOZ REFINADA)
      */
     function mostrarAjudaVisual() {
         if (!containerAjuda) return;
+
         const div = document.createElement("div");
         div.id = "visual-calculo";
+
+        const nome = localStorage.getItem("nomeJogador") || "Jogador";
+
+        const mapaObjetos = {
+            "🍎": "maçãs", "⭐": "estrelas", "⚽": "bolas", "🍓": "morangos",
+            "🍌": "bananas", "🚗": "carros", "🧸": "ursinhos", "🎈": "balões",
+            "❤️": "corações", "🐝": "abelhas"
+        };
+
+        const nomeObjeto = mapaObjetos[emojiAtual] || "itens";
 
         const gerarEmojis = (qtd) => {
             let html = "";
             for (let i = 0; i < qtd; i++) {
-                html += `<span class="emoji-ajuda" style="--i:${i}">${emojiAtual}</span>`;
+                html += `
+                    <span class="emoji-ajuda destaque-contagem" style="--i:${i}">
+                        ${emojiAtual}
+                    </span>
+                `;
             }
             return html;
         };
@@ -183,25 +226,54 @@ document.addEventListener("DOMContentLoaded", () => {
         let htmlFinal = "";
 
         if (operacao === "soma") {
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">+</div><div class="linha-calculo">${gerarEmojis(numero2)}</div>`;
+            htmlFinal = `
+                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="sinal-calculo">+</div>
+                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+            `;
         } 
         else if (operacao === "subtracao") {
             const resultado = numero1 - numero2;
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">−</div><div class="linha-calculo">${gerarEmojis(numero2)}</div><div class="sinal-calculo">=</div><div class="linha-calculo">${gerarEmojis(resultado)}</div>`;
+            htmlFinal = `
+                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="sinal-calculo">−</div>
+                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+                <div class="sinal-calculo">=</div>
+                <div class="linha-calculo">${gerarEmojis(resultado)}</div>
+            `;
         } 
         else if (operacao === "divisao") {
             const resultado = numero1 / numero2;
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">÷</div><div class="linha-calculo">${gerarEmojis(numero2)}</div><div class="sinal-calculo">=</div><div class="linha-calculo">${gerarEmojis(resultado)}</div>`;
+            htmlFinal = `
+                <div class="linha-calculo">${gerarEmojis(numero1)}</div>
+                <div class="sinal-calculo">÷</div>
+                <div class="linha-calculo">${gerarEmojis(numero2)}</div>
+                <div class="sinal-calculo">=</div>
+                <div class="linha-calculo">${gerarEmojis(resultado)}</div>
+            `;
         }
 
         div.innerHTML = htmlFinal;
-        Object.assign(div.style, { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", width: "100%", animation: "bounceIn 0.5s ease" });
+
+        Object.assign(div.style, {
+            display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", gap: "10px", width: "100%",
+            animation: "bounceIn 0.5s ease"
+        });
+
         containerAjuda.innerHTML = "";
         containerAjuda.appendChild(div);
+
+        // 🔊 CORREÇÃO: Delay de 1200ms para evitar sobreposição com a frase de erro
+        setTimeout(() => {
+            if (typeof falar === "function") {
+                falar(`${nome}, agora preste atenção. Conte os ${nomeObjeto} que estão aparecendo na tela para te ajudar.`);
+            }
+        }, 1200);
     }
 
     /**
-     * ❤️ FUNÇÃO: dispararFraseMotivacional (VERSÃO BLINDADA)
+     * ❤️ FUNÇÃO: dispararFraseMotivacional
      */
     function dispararFraseMotivacional() {
         if (!window._ultimoApoioTempo) window._ultimoApoioTempo = 0;
@@ -209,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (agora - window._ultimoApoioTempo < 6000) return;
         window._ultimoApoioTempo = agora;
 
-        const frases = [
+        const frasesApoio = [
             "Tudo bem errar, faz parte de aprender. Você está indo bem.",
             "Respire fundo, com calma você consegue tentar de novo.",
             "Cada tentativa é um passo à frente, continue assim.",
@@ -219,30 +291,19 @@ document.addEventListener("DOMContentLoaded", () => {
             "Está tudo bem parar um segundo e respirar.",
             "Você já conseguiu antes, pode conseguir de novo.",
             "Errar é só parte do caminho, continue tentando.",
-            "Respire, pense com calma e tente mais uma vez.",
-            "Você está aprendendo, isso é o mais importante.",
-            "Não precisa ter pressa, vá no seu ritmo.",
-            "Está indo bem, continue tentando com calma.",
-            "Se ficar difícil, peça ajuda, tudo bem.",
-            "Você é inteligente, confie em você.",
-            "Vamos tentar juntos mais uma vez, com calma.",
-            "Respire fundo, você consegue dar o próximo passo.",
-            "Tudo bem descansar um pouco e depois tentar de novo.",
-            "Cada erro ensina algo novo, continue.",
-            "Você está fazendo um bom trabalho, não desista."
+            "Você está aprendendo, isso é o mais importante."
         ];
 
         let fraseEscolhida;
-        
-        if (frases.length > 1) {
+        if (frasesApoio.length > 1) {
             do {
-                fraseEscolhida = frases[Math.floor(Math.random() * frases.length)];
-            } while (fraseEscolhida === ultimaFrase);
+                fraseEscolhida = frasesApoio[Math.floor(Math.random() * frasesApoio.length)];
+            } while (fraseEscolhida === ultimaFraseApoio);
         } else {
-            fraseEscolhida = frases[0];
+            fraseEscolhida = frasesApoio[0];
         }
 
-        ultimaFrase = fraseEscolhida;
+        ultimaFraseApoio = fraseEscolhida;
 
         setTimeout(() => {
             if (typeof falar === "function") falar(fraseEscolhida, "dica");
