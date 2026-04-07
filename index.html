@@ -8,8 +8,6 @@
 </head>
 <body>
 
-    <button id="ativarAudio" aria-label="Ativar som do jogo"></button>
-
     <main class="container">
         <div 
             id="perfil-container" 
@@ -44,8 +42,8 @@
 
         <nav class="menu-materias" role="navigation" aria-label="Escolha uma operação">
             <button class="btn btn-destaque" data-materia="soma">SOMA (+)</button>
-            <button class="btn" data-materia="subtracao">SUBTRAÇÃO (-)</button>
-            <button class="btn" data-materia="divisao">DIVISÃO (÷)</button>
+            <button class="btn btn-destaque" data-materia="subtracao">SUBTRAÇÃO (−)</button>
+            <button class="btn btn-destaque" data-materia="divisao">DIVISÃO (÷)</button>
         </nav>
     </main>
 
@@ -53,84 +51,68 @@
     <script src="js/voz.js"></script>
 
     <script>
-        const btnAudio = document.getElementById("ativarAudio");
+        /**
+         * 1. DESBLOQUEIO DE ÁUDIO PADRONIZADO (FIX MOBILE)
+         * Substitui o antigo botão invisível pelo toque em qualquer lugar da tela.
+         */
+        document.addEventListener("pointerdown", () => {
+            if (typeof liberarAudio === "function") liberarAudio();
+            if (typeof liberarVoz === "function") liberarVoz();
+
+            if (typeof gerenciarMusicaFundo === "function") {
+                gerenciarMusicaFundo("home");
+            }
+            console.log("[SISTEMA]: Áudio e Trilha 'Home' desbloqueados pelo toque.");
+        }, { once: true });
+
+        // --- Lógica de Interface da Home ---
         const inputFoto = document.getElementById("inputFoto");
         const fotoJogador = document.getElementById("foto-jogador");
         const perfilContainer = document.getElementById("perfil-container");
         const inputNome = document.getElementById("nomeJogador");
-        const botoes = document.querySelectorAll(".btn");
+        const botoes = document.querySelectorAll(".btn-destaque");
 
-        // 1. DESBLOQUEIO DE HARDWARE DE ÁUDIO
-        btnAudio.addEventListener("click", () => {
-            // Libera o contexto de áudio e síntese de voz do navegador
-            if (typeof liberarAudio === "function") liberarAudio();
-            if (typeof liberarVoz === "function") liberarVoz();
-            
-            // Inicia trilha sonora se disponível
-            if (typeof gerenciarMusicaFundo === "function") {
-                gerenciarMusicaFundo("home");
-            }
-
-            btnAudio.remove(); // Remove o bloqueador após o primeiro toque
-            console.log("[SISTEMA]: Áudio e Voz liberados.");
-        });
-
-        // 2. GESTÃO DA FOTO DE PERFIL
+        // 2. GESTÃO DE FOTO DE PERFIL
         perfilContainer.addEventListener("click", () => inputFoto.click());
 
         inputFoto.addEventListener("change", (e) => {
-            const arquivo = e.target.files[0];
-            if (arquivo) {
-                const leitor = new FileReader();
-                leitor.onload = (event) => {
-                    const linkFoto = event.target.result;
-                    fotoJogador.src = linkFoto;
-                    localStorage.setItem("fotoJogador", linkFoto);
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    fotoJogador.src = base64;
+                    localStorage.setItem("fotoJogador", base64);
+                    if (typeof tocarSom === "function") tocarSom('clique');
                 };
-                leitor.readAsDataURL(arquivo);
+                reader.readAsDataURL(file);
             }
         });
 
-        // Recupera a foto salva anteriormente
-        const fotoSalva = localStorage.getItem("fotoJogador");
-        if (fotoSalva) {
-            fotoJogador.src = fotoSalva;
-        }
-
-        // 3. FUNÇÃO DE INÍCIO DO JOGO (COM MODO DINÂMICO)
+        // 3. INICIALIZAÇÃO DO JOGO
         function iniciar(materia) {
-            const nome = inputNome.value.trim();
+            const nome = inputNome.value.trim() || "Amigo";
             
-            // Validação mínima de nome
-            if (nome.length < 2) {
-                alert("Por favor, digite seu nome para começar a aventura!");
-                return;
-            }
+            if (typeof tocarSom === "function") tocarSom('clique');
 
-            // SALVAMENTO DE DADOS PARA O MOTOR DO JOGO (GAME.JS)
             localStorage.setItem("nomeJogador", nome);
-            localStorage.setItem("modoJogo", materia); // Sincronizado com a engine unificada
+            localStorage.setItem("modoJogo", materia);
 
-            // Garante que haja uma foto padrão caso nenhuma tenha sido escolhida
             if (!localStorage.getItem("fotoJogador")) {
                 localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
             }
 
-            // Feedback por voz personalizado
             if (typeof falar === "function") {
                 falar(`Olá ${nome}, vamos jogar ${materia}!`);
             }
 
-            // Desabilita botões para evitar cliques múltiplos durante a transição
             botoes.forEach(b => b.disabled = true);
 
-            // Pequeno atraso para o áudio da voz ser processado antes da troca de página
             setTimeout(() => {
                 window.location.href = "game.html";
             }, 1000);
         }
 
-        // 4. ATRIBUIÇÃO DE EVENTOS AOS BOTÕES DO MENU
         botoes.forEach(btn => {
             btn.addEventListener("click", () => {
                 const materiaSelecionada = btn.getAttribute("data-materia");
@@ -138,10 +120,15 @@
             });
         });
 
-        // Recupera o nome salvo anteriormente para facilitar o retorno
+        // Recuperar nome salvo
         const nomeSalvo = localStorage.getItem("nomeJogador");
         if (nomeSalvo) {
             inputNome.value = nomeSalvo;
+        }
+
+        const fotoSalva = localStorage.getItem("fotoJogador");
+        if (fotoSalva) {
+            fotoJogador.src = fotoSalva;
         }
     </script>
 </body>

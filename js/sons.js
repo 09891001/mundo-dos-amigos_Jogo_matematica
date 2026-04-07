@@ -1,7 +1,7 @@
 /**
  * MUNDO DOS AMIGOS - SISTEMA DE ÁUDIO (ENGINE SONORA)
- * 🔒 VERSÃO FINAL: 6.4.0 - FIX: TOTAL BUFFER RESET & MEMORY CLEANUP
- * Foco: Estabilidade AAA, anti-glitch e performance mobile.
+ * 🔒 VERSÃO FINAL: 6.7.0 - FIX: MOBILE AUTO-RESUME & SAFE PLAYBACK
+ * Foco: Estabilidade total em transições de tela e compatibilidade mobile.
  */
 
 const sons = {
@@ -16,7 +16,7 @@ const sons = {
     fundo3: new Audio('sons/fundo3.mp3')
 };
 
-// 🔥 CONTROLE EXTERNO DE TIMEOUTS (Isolamento de estado)
+// CONTROLE EXTERNO DE TIMEOUTS (Gestão de Memória)
 const controleTimeouts = {};
 
 // Configuração inicial de volumes e pré-carregamento
@@ -26,8 +26,8 @@ Object.values(sons).forEach(s => {
 });
 
 // Configurações de trilhas sonoras (Loop e Volume baixo)
-const trilhas = ['fundo1', 'fundo2', 'fundo3', 'home'];
-trilhas.forEach(t => {
+const trilhasNomes = ['fundo1', 'fundo2', 'fundo3', 'home'];
+trilhasNomes.forEach(t => {
     if (sons[t]) {
         sons[t].volume = 0.12; 
         sons[t].loop = true;
@@ -38,14 +38,17 @@ let musicaAtual = null;
 let audioLiberado = false;
 
 /**
- * 🔓 SISTEMA DE DESBLOQUEIO (MOBILE FIX)
- * Libera o hardware de som no primeiro toque do usuário.
+ * 🔓 SISTEMA DE DESBLOQUEIO (FIX DE HARDWARE)
+ * Libera apenas efeitos para não interromper a trilha ativa.
  */
 function liberarAudio() {
     if (audioLiberado) return;
 
-    Object.values(sons).forEach(som => {
+    Object.entries(sons).forEach(([nome, som]) => {
         try {
+            const isTrilha = trilhasNomes.includes(nome);
+            if (isTrilha) return;
+
             const playPromise = som.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
@@ -59,7 +62,7 @@ function liberarAudio() {
     });
 
     audioLiberado = true;
-    console.log("[AUDIO]: Engine AAA pronta. Reset de buffer ativado.");
+    console.log("[AUDIO]: Engine 6.7.0 pronta. Hardware liberado.");
 
     if (musicaAtual) {
         executarAudioSeguro(musicaAtual);
@@ -69,21 +72,27 @@ function liberarAudio() {
 document.addEventListener("pointerdown", liberarAudio, { once: true });
 
 /**
- * 🛡️ EXECUÇÃO PROTEGIDA (TRILHAS)
+ * 🛡️ EXECUÇÃO SEGURA (FIX DEFINITIVO MOBILE)
+ * Garante a tentativa de reprodução sem bloqueios por estado inconsistente.
  */
 function executarAudioSeguro(audio) {
     if (!audio) return;
-    if (!audio.paused && audio.currentTime > 0) return;
 
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-        playPromise.then(() => {}).catch(() => {});
+    try {
+        const playPromise = audio.play();
+
+        if (playPromise !== undefined) {
+            playPromise.catch(() => {
+                // Silêncio total: o navegador pode bloquear temporariamente em trocas de aba
+            });
+        }
+    } catch (e) {
+        // Segurança total contra exceções de hardware
     }
 }
 
 /**
- * 🎧 EXECUÇÃO DE EFEITOS (RESET TOTAL DE BUFFER + ANTI-SPAM)
- * Garante que o som seja reiniciado instantaneamente sem glitches.
+ * 🎧 EXECUÇÃO DE EFEITOS (ANTI-SPAM & RESET)
  */
 function tocarSom(nome) {
     if (!sons[nome] || !audioLiberado) return;
@@ -91,43 +100,36 @@ function tocarSom(nome) {
     try {
         const som = sons[nome];
 
-        // Limpa timeout anterior se houver para evitar fila
         if (controleTimeouts[nome]) {
             clearTimeout(controleTimeouts[nome]);
             delete controleTimeouts[nome]; 
         }
 
-        // 🔥 RESET TOTAL DE BUFFER: Evita glitches em repetições rápidas
         if (!som.paused) {
             som.pause();
             som.currentTime = 0; 
         }
 
-        // Agendamento de 10ms para estabilidade de buffer do navegador
         controleTimeouts[nome] = setTimeout(() => {
             try {
                 som.currentTime = 0;
-
                 const playPromise = som.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {});
                 }
-
-                // Limpeza de memória
                 delete controleTimeouts[nome];
-
             } catch (err) {
                 delete controleTimeouts[nome];
             }
         }, 10);
 
     } catch (err) {
-        console.error("[AUDIO]: Falha crítica no efeito: " + nome, err);
+        console.error("[AUDIO]: Falha no efeito: " + nome, err);
     }
 }
 
 /**
- * 🎼 GERENCIAMENTO DE TRILHAS
+ * 🎼 GERENCIAMENTO DE TRILHAS (RESILIENTE)
  */
 function gerenciarMusicaFundo(nivel) {
     let novaMusica = null;
@@ -139,7 +141,7 @@ function gerenciarMusicaFundo(nivel) {
 
     if (musicaAtual === novaMusica) return;
 
-    if (musicaAtual) {
+    if (musicaAtual && musicaAtual !== novaMusica) {
         musicaAtual.pause();
         musicaAtual.currentTime = 0;
     }

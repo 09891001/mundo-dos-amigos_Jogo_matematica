@@ -8,7 +8,7 @@
 </head>
 <body class="tema-nivel-1">
 
-    <button id="ativarAudio" aria-label="Ativar som do jogo"></button>
+    <!-- 🔥 BOTÃO REDUNDANTE REMOVIDO: O sistema agora desbloqueia no toque em qualquer lugar -->
 
     <header class="header-game">
         <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
@@ -32,7 +32,8 @@
         <h2 id="question">Carregando...</h2>
 
         <section id="area-ajuda-visual" aria-live="polite">
-            </section>
+            <!-- Área reservada para os emojis de ajuda pedagógica -->
+        </section>
 
         <section id="game" class="choices-grid">
             <div class="choice-container" data-number="0" role="button" tabindex="0">
@@ -50,29 +51,21 @@
         </section>
     </main>
 
+    <!-- Scripts na ordem correta de dependência -->
     <script src="js/sons.js"></script>
     <script src="js/voz.js"></script>
     <script src="js/game.js"></script>
 
     <script>
         /**
-         * AJUSTES DE INTERFACE ESPECÍFICOS DA PÁGINA
+         * AJUSTES DE INTERFACE ESPECÍFICOS DA PÁGINA (LIMPO)
          */
         document.addEventListener("DOMContentLoaded", () => {
             const btnSair = document.getElementById("btnSair");
             const fotoHud = document.getElementById("foto-jogador");
-            const btnAudio = document.getElementById("ativarAudio");
 
-            // 1. Desbloqueio de áudio por interação
-            if (btnAudio) {
-                btnAudio.addEventListener("click", () => {
-                    if (typeof liberarAudio === "function") liberarAudio();
-                    if (typeof liberarVoz === "function") liberarVoz();
-                    
-                    btnAudio.remove();
-                    console.log("[SISTEMA]: Áudio em jogo liberado.");
-                });
-            }
+            // 1. Desbloqueio automático gerenciado pelo sons.js via 'pointerdown'
+            // O código redundante do btnAudio foi removido com sucesso.
 
             // 2. Carregar foto do perfil salva
             const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";

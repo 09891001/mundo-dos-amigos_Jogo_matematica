@@ -1,7 +1,7 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V11.4.0)
- * 🔒 VERSÃO FINAL ABSOLUTA: ROBUSTEZ CONTRA LOOP E SINCRONIZAÇÃO AAA
- * Foco: Estabilidade total, Prevenção de Bugs Críticos e Acessibilidade TEA.
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V11.5.0)
+ * 🔒 VERSÃO FINAL ABSOLUTA: GARANTIA DE TRILHA SONORA ATIVA
+ * Foco: Estabilidade total, Sincronização de Áudio Mobile e Acessibilidade TEA.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🔄 FUNÇÃO: proximaPergunta
+     * 🔄 FUNÇÃO: proximaPergunta (FIX: GARANTIR MÚSICA ATIVA)
      */
     function proximaPergunta() {
         window.__bloqueadoResposta = false;
@@ -98,6 +98,11 @@ document.addEventListener("DOMContentLoaded", () => {
             window.respostaCorreta = Math.floor(Math.random() * 5) + 1;
             numero1 = numero2 * window.respostaCorreta;
             simbolo = "÷";
+        }
+
+        // 🔥 GARANTE MÚSICA DE FUNDO ATIVA NO INÍCIO DO JOGO
+        if (typeof gerenciarMusicaFundo === "function") {
+            gerenciarMusicaFundo(1);
         }
 
         const listaEmojis = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗", "🧸", "🎈"];
@@ -229,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let fraseEscolhida;
         
-        // 🔒 Proteção contra loop infinito se houver apenas 1 frase
         if (frases.length > 1) {
             do {
                 fraseEscolhida = frases[Math.floor(Math.random() * frases.length)];
