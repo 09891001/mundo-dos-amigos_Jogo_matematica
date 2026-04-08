@@ -8,18 +8,16 @@
 </head>
 <body class="tema-nivel-1">
 
-    <!-- 🔥 BOTÃO REDUNDANTE REMOVIDO: O sistema agora desbloqueia no toque em qualquer lugar -->
-
     <header class="header-game">
         <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
         <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto do jogador" class="foto-perfil-hud">
     </header>
 
     <main class="container">
-        <section id="hud">
+        <section id="hud" aria-label="Informações do jogo">
             <div class="hud-item">
                 <p id="progressText">Fase 1/30</p>
-                <div id="progressBar">
+                <div id="progressBar" role="progressbar" aria-valuemin="1" aria-valuemax="30">
                     <div id="progressBarFull"></div>
                 </div>
             </div>
@@ -29,13 +27,12 @@
             </div>
         </section>
 
-        <h2 id="question">Carregando...</h2>
+        <h2 id="question" tabindex="-1" aria-live="assertive">Carregando pergunta...</h2>
 
-        <section id="area-ajuda-visual" aria-live="polite">
-            <!-- Área reservada para os emojis de ajuda pedagógica -->
-        </section>
+        <section id="area-ajuda-visual" aria-live="assertive" aria-label="Ajuda visual da conta">
+            </section>
 
-        <section id="game" class="choices-grid">
+        <section id="choices-area" role="group" aria-label="Opções de resposta">
             <div class="choice-container" data-number="0" role="button" tabindex="0">
                 <p class="choice-text">0</p>
             </div>
@@ -51,30 +48,31 @@
         </section>
     </main>
 
-    <!-- Scripts na ordem correta de dependência -->
     <script src="js/sons.js"></script>
     <script src="js/voz.js"></script>
     <script src="js/game.js"></script>
 
     <script>
         /**
-         * AJUSTES DE INTERFACE ESPECÍFICOS DA PÁGINA (LIMPO)
+         * LÓGICA DE INTERFACE DA PÁGINA
          */
         document.addEventListener("DOMContentLoaded", () => {
             const btnSair = document.getElementById("btnSair");
             const fotoHud = document.getElementById("foto-jogador");
 
-            // 1. Desbloqueio automático gerenciado pelo sons.js via 'pointerdown'
-            // O código redundante do btnAudio foi removido com sucesso.
-
-            // 2. Carregar foto do perfil salva
+            // 1. Carregar foto do perfil do LocalStorage
             const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            if (fotoHud) fotoHud.src = fotoSalva;
+            if (fotoHud) {
+                fotoHud.src = fotoSalva;
+            }
 
-            // 3. Controle do botão Sair
+            // 2. Controle do botão Sair com confirmação e feedback sonoro
             if (btnSair) {
                 btnSair.addEventListener("click", () => {
-                    if (confirm("Deseja mesmo sair? Seu progresso atual não será salvo.")) {
+                    if (confirm("Deseja mesmo sair? Seu progresso nesta partida não será salvo.")) {
+                        if (typeof sons !== 'undefined' && sons.sair) {
+                            sons.sair.play().catch(() => {});
+                        }
                         window.location.href = "index.html";
                     }
                 });
