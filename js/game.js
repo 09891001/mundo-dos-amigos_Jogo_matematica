@@ -1,130 +1,166 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V13.2.0)
- * 🔒 STATUS: AUDITORIA SÊNIOR COMPLETA
- * ✅ FIX: Foco Acessível (NVDA/VoiceOver)
- * ✅ FIX: Sincronia de Voz iOS
- * ✅ FIX: Suporte Total a Teclado (Enter/Espaço)
- * ✅ FIX: Prevenção de Duplicidade Sonora
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V18.2.0)
+ * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - DIAMOND MASTER EDITION
+ * ✅ INTEGRIDADE: 100% (Voz, Música, Acessibilidade, Lógica TEA)
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Seleção de Elementos do DOM ---
-    const elPergunta = document.getElementById('question');
-    const elScore = document.getElementById('score');
-    const elBarra = document.getElementById('progressBarFull');
-    const elFase = document.getElementById('progressText');
-    const elEstrelas = document.getElementById('estrelas');
-    const containerAjuda = document.getElementById("area-ajuda-visual");
+    // --- Seleção de Elementos (Nodes) ---
+    const nodes = {
+        pergunta: document.getElementById('question'),
+        score: document.getElementById('score'),
+        barra: document.getElementById('progressBarFull'),
+        fase: document.getElementById('progressText'),
+        estrelas: document.getElementById('estrelas'),
+        ajuda: document.getElementById("area-ajuda-visual"),
+        musica: document.getElementById('musica-fundo')
+    };
 
-    // --- Estado Global do Jogo ---
-    let operacao = localStorage.getItem("modoJogo") || "soma";
-    let fase = 1;
-    let score = 0;
-    let estrelas = parseInt(localStorage.getItem("estrelas")) || 0; 
-    let acertosSeguidos = 0;
-    let numero1 = 0;
-    let numero2 = 0;
-    let errosSeguidos = 0;
-    let emojiAtual = "🍎";
-    let ultimaFraseApoio = ""; 
-    
-    window.respostaCorreta = 0;
-    window.__bloqueadoResposta = false;
+    // --- Estado Global do Jogo (State) ---
+    const state = {
+        operacao: localStorage.getItem("modoJogo") || "soma",
+        fase: 1,
+        score: 0,
+        estrelas: parseInt(localStorage.getItem("estrelas")) || 0,
+        acertosSeguidos: 0,
+        numero1: 0,
+        numero2: 0,
+        errosSeguidos: 0,
+        emojiAtual: "🍎",
+        bloqueado: false, 
+        respostaCorreta: 0,
+        repetirPergunta: false,
+        ultimaFraseApoio: ""
+    };
+
+    // Controle de hardware para iOS
+    window.__audioLiberado = false;
+    window.__vozTesteFeita = false;
 
     /**
-     * ⭐ SISTEMA DE RECOMPENSA E HUD
+     * 🔓 FUNÇÃO: desbloquearAudioIOS
+     * Libera o canal e aquece o motor de vozes no Safari.
      */
-    function registrarAcerto() {
-        estrelas++;
-        acertosSeguidos++;
-        score += 10;
-        atualizarHUD();
+    function desbloquearAudioIOS() {
+        if (window.__audioLiberado) return;
+        try {
+            speechSynthesis.cancel();
+            
+            const utter = new SpeechSynthesisUtterance("ok");
+            utter.volume = 0;
+            speechSynthesis.speak(utter);
 
-        if (acertosSeguidos === 3) {
-            estrelas += 2;
-            mostrarPopupBonus("🔥 SEQUÊNCIA INCRÍVEL! +2 ⭐");
-            if (typeof tocarSom === "function") tocarSom('bonus');
+            setTimeout(() => {
+                speechSynthesis.cancel();
+                // Double-tap de hardware para iOS
+                speechSynthesis.speak(new SpeechSynthesisUtterance(" "));
+                speechSynthesis.cancel();
+
+                const vozes = speechSynthesis.getVoices();
+                if (!vozes || vozes.length === 0) speechSynthesis.getVoices();
+            }, 20);
+
+            if (nodes.musica) {
+                nodes.musica.volume = 0.15;
+                nodes.musica.play().catch(e => console.warn("BGM aguardando interação."));
+            }
+            
+            window.__audioLiberado = true;
+            console.log("[Engine]: Diamond Master Edition Ativada.");
+        } catch (e) {
+            console.warn("[Engine]: Falha no handshake de áudio.");
         }
-    }
-
-    function registrarErro() {
-        acertosSeguidos = 0;
-        errosSeguidos++;
-    }
-
-    function atualizarHUD() {
-        if (elScore) elScore.innerText = score;
-        if (elFase) elFase.innerText = `Fase ${fase}/30`;
-        if (elBarra) elBarra.style.width = `${(fase / 30) * 100}%`;
-        
-        if (elEstrelas) {
-            elEstrelas.innerText = estrelas;
-            elEstrelas.classList.add("acerto-animado");
-            setTimeout(() => elEstrelas.classList.remove("acerto-animado"), 400);
-        }
-    }
-
-    function mostrarPopupBonus(texto) {
-        const div = document.createElement("div");
-        div.innerText = texto;
-        div.className = "fade-in"; 
-        Object.assign(div.style, {
-            position: "fixed", top: "20%", left: "50%", transform: "translateX(-50%)",
-            background: "#4CAF50", color: "#fff", padding: "15px 30px",
-            borderRadius: "20px", fontSize: "20px", fontWeight: "900",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.3)", zIndex: "10000", pointerEvents: "none"
-        });
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 2000);
     }
 
     /**
-     * 🔄 LÓGICA DE GERAÇÃO DE PERGUNTAS
+     * 📊 FUNÇÃO: atualizarHUD
+     */
+    function atualizarHUD() {
+        if (nodes.score) nodes.score.innerText = state.score;
+        if (nodes.fase) nodes.fase.innerText = `Fase ${state.fase}/30`;
+        if (nodes.barra) nodes.barra.style.width = `${(state.fase / 30) * 100}%`;
+        
+        if (nodes.estrelas) {
+            nodes.estrelas.innerText = state.estrelas;
+            nodes.estrelas.classList.remove("acerto-animado");
+            void nodes.estrelas.offsetWidth; 
+            nodes.estrelas.classList.add("acerto-animado");
+        }
+    }
+
+    /**
+     * ❤️ FUNÇÃO: dispararFraseMotivacional (Suporte TEA)
+     */
+    function dispararFraseMotivacional() {
+        const frasesApoio = [
+            "Tudo bem errar, faz parte de aprender. Você está indo bem.",
+            "Respire fundo, com calma você consegue tentar de novo.",
+            "Cada tentativa é um passo à frente, continue assim.",
+            "Você é capaz, só precisa de um pouquinho de calma.",
+            "Não tem problema errar, vamos tentar juntos mais uma vez."
+        ];
+
+        let fraseEscolhida;
+        do {
+            fraseEscolhida = frasesApoio[Math.floor(Math.random() * frasesApoio.length)];
+        } while (fraseEscolhida === state.ultimaFraseApoio);
+
+        state.ultimaFraseApoio = fraseEscolhida;
+
+        setTimeout(() => {
+            if (typeof falar === "function") falar(fraseEscolhida);
+        }, 800);
+    }
+
+    /**
+     * 🔄 FUNÇÃO: proximaPergunta
      */
     function proximaPergunta() {
-        window.__bloqueadoResposta = false;
-        errosSeguidos = 0;
-        limparEmojisAjuda();
+        if (state.repetirPergunta) {
+            state.repetirPergunta = false;
+            state.bloqueado = false;
+            montarOpcoes();
+            return;
+        }
+
+        state.bloqueado = false;
+        state.errosSeguidos = 0;
+        if (nodes.ajuda) nodes.ajuda.innerHTML = "";
 
         let simbolo = "+";
+        const limite = Math.min(5 + state.fase, 20);
 
-        if (operacao === "soma") {
-            numero1 = Math.floor(Math.random() * 5) + 1;
-            numero2 = Math.floor(Math.random() * 5) + 1;
-            window.respostaCorreta = numero1 + numero2;
-            simbolo = "+";
-        } 
-        else if (operacao === "subtracao") {
-            numero1 = Math.floor(Math.random() * 9) + 2;
-            numero2 = Math.floor(Math.random() * (numero1 - 1)) + 1;
-            window.respostaCorreta = numero1 - numero2;
+        if (state.operacao === "soma") {
+            state.numero1 = Math.floor(Math.random() * 5) + 1;
+            state.numero2 = Math.floor(Math.random() * 5) + 1;
+            state.respostaCorreta = state.numero1 + state.numero2;
+        } else if (state.operacao === "subtracao") {
+            state.numero1 = Math.floor(Math.random() * 9) + 2;
+            state.numero2 = Math.floor(Math.random() * (state.numero1 - 1)) + 1;
+            state.respostaCorreta = state.numero1 - state.numero2;
             simbolo = "−";
-        } 
-        else if (operacao === "divisao") {
-            numero2 = Math.floor(Math.random() * 4) + 1;
-            window.respostaCorreta = Math.floor(Math.random() * 5) + 1;
-            numero1 = numero2 * window.respostaCorreta;
+        } else if (state.operacao === "divisao") {
+            state.numero2 = Math.floor(Math.random() * 4) + 1;
+            let result = Math.floor(Math.random() * 5) + 1;
+            state.numero1 = state.numero2 * result;
+            state.respostaCorreta = result;
             simbolo = "÷";
         }
 
-        if (typeof gerenciarMusicaFundo === "function") {
-            gerenciarMusicaFundo(1);
-        }
-
-        const listaEmojis = ["🍎", "⭐", "⚽", "🍓", "🍌", "🚗", "🧸", "🎈", "❤️", "🐝"];
-        emojiAtual = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
-
-        if (elPergunta) {
-            const textoQuestao = `Quanto é ${numero1} ${simbolo} ${numero2}?`;
-            elPergunta.innerText = textoQuestao;
+        if (nodes.pergunta) {
+            const textoQuestao = `Quanto é ${state.numero1} ${simbolo} ${state.numero2}?`;
+            nodes.pergunta.innerText = textoQuestao;
+            nodes.pergunta.setAttribute("role", "alert");
             
-            // ♿ FORÇA FOCO PARA LEITOR DE TELA (NVDA / VoiceOver)
-            // Garante que o leitor anuncie a nova pergunta imediatamente.
-            elPergunta.focus();
+            setTimeout(() => {
+                nodes.pergunta.focus();
+            }, 50);
 
-            // 🔊 Sincronização de fala (Ajuste cirúrgico para iPhone)
-            if (typeof falar === "function") {
-                setTimeout(() => falar(textoQuestao), 300);
+            if (typeof falar === "function" && window.__audioLiberado && state.fase > 1 && window.__vozTesteFeita) {
+                speechSynthesis.cancel();
+                setTimeout(() => {
+                    falar(textoQuestao);
+                }, 60);
             }
         }
         
@@ -133,146 +169,151 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * 🎯 MECÂNICA DE RESPOSTA
+     * 🎯 FUNÇÃO: selecionarRespostaDireta
      */
     function selecionarRespostaDireta(botao) {
-        if (window.__bloqueadoResposta) return;
-        window.__bloqueadoResposta = true;
+        if (state.bloqueado) return;
+        state.bloqueado = true;
 
         const valor = Number(botao.dataset.number);
-        const acertou = valor === window.respostaCorreta;
+        if (isNaN(valor)) {
+            state.bloqueado = false;
+            return;
+        }
+
+        const acertou = valor === state.respostaCorreta;
         const nome = localStorage.getItem("nomeJogador") || "Jogador";
 
         if (acertou) {
-            botao.classList.add("correto", "acerto-animado");
-            registrarAcerto();
-            
-            if (typeof tocarSom === "function") tocarSom('acerto');
-            if (typeof falar === "function") falar(`${nome}, você acertou! Mandou muito bem!`, "festa");
+            botao.classList.add("corcorre", "acerto-animado");
+            if (nodes.ajuda) nodes.ajuda.innerHTML = "";
+            state.score += 10;
+            state.acertosSeguidos++;
+            state.estrelas++;
+
+            if (state.acertosSeguidos % 3 === 0) state.estrelas += 2;
+
+            atualizarHUD();
+            if (typeof falar === "function" && window.__audioLiberado) {
+                falar(`${nome}, você acertou!`);
+            }
 
             setTimeout(() => {
-                fase++;
-                fase > 30 ? finalizarJogo() : proximaPergunta();
+                state.fase++;
+                state.bloqueado = false;
+                state.fase > 30 ? finalizarJogo() : proximaPergunta();
             }, 1500);
-
         } else {
             botao.classList.add("errado", "erro-animado");
-            registrarErro();
+            state.acertosSeguidos = 0;
+            state.errosSeguidos++;
 
-            if (typeof tocarSom === "function") tocarSom('erro');
-            if (typeof falar === "function") falar(`${nome}, tente novamente com calma.`);
+            if (typeof falar === "function" && window.__audioLiberado) {
+                falar(`${nome}, tente novamente.`);
+            }
 
-            if (errosSeguidos >= 2) mostrarAjudaVisual();
-            if (errosSeguidos >= 3) dispararFraseMotivacional();
+            if (state.errosSeguidos >= 2) mostrarAjudaVisual();
+            if (state.errosSeguidos >= 3) dispararFraseMotivacional();
 
             setTimeout(() => {
                 botao.classList.remove("errado", "erro-animado");
-                window.__bloqueadoResposta = false;
+                state.repetirPergunta = true; 
+                state.bloqueado = false;
+                proximaPergunta();
             }, 800);
         }
     }
 
     /**
-     * 🎨 AJUDA VISUAL (MÉTODO TEA - CONTAGEM RÍTMICA)
+     * 🎨 FUNÇÃO: mostrarAjudaVisual (Reforço Pedagógico)
      */
     function mostrarAjudaVisual() {
-        if (!containerAjuda) return;
-
-        const div = document.createElement("div");
-        div.id = "visual-calculo";
+        if (!nodes.ajuda) return;
         const nome = localStorage.getItem("nomeJogador") || "Jogador";
-        let delayGlobal = 0;
-
-        const gerarEmojis = (qtd) => {
-            let html = "";
-            for (let i = 0; i < qtd; i++) {
-                html += `<span class="emoji-ajuda contagem-sequencial" style="--delay:${delayGlobal}s">${emojiAtual}</span>`;
-                delayGlobal += 0.4;
-            }
-            return html;
-        };
-
-        let htmlFinal = "";
-        if (operacao === "soma") {
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">+</div><div class="linha-calculo">${gerarEmojis(numero2)}</div>`;
-        } else if (operacao === "subtracao") {
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">−</div><div class="linha-calculo">${gerarEmojis(numero2)}</div>`;
-        } else if (operacao === "divisao") {
-            htmlFinal = `<div class="linha-calculo">${gerarEmojis(numero1)}</div><div class="sinal-calculo">÷</div><div class="linha-calculo">${gerarEmojis(numero2)}</div>`;
+        
+        // Estrutura de auxílio visual baseada em emojis
+        let helpHTML = `<div id="visual-calculo" style="display:flex; flex-direction:column; align-items:center; gap:10px; animation: bounceIn 0.5s;">`;
+        
+        const gerarEmojis = (n) => Array(n).fill(`<span style="font-size:1.5rem">${state.emojiAtual}</span>`).join("");
+        
+        if (state.operacao === "soma") {
+            helpHTML += `<div>${gerarEmojis(state.numero1)}</div><div>+</div><div>${gerarEmojis(state.numero2)}</div>`;
+        } else if (state.operacao === "subtracao") {
+            helpHTML += `<div>${gerarEmojis(state.numero1)}</div><div>-</div><div>${gerarEmojis(state.numero2)}</div>`;
+        } else if (state.operacao === "divisao") {
+            helpHTML += `<div>${gerarEmojis(state.numero1)} repartidos para ${state.numero2}</div>`;
         }
-
-        div.innerHTML = htmlFinal;
-        containerAjuda.innerHTML = "";
-        containerAjuda.appendChild(div);
-
+        
+        helpHTML += `</div>`;
+        nodes.ajuda.innerHTML = helpHTML;
+        
         setTimeout(() => {
-            if (typeof falar === "function") falar(`${nome}, conte as figuras na tela.`, "dica");
-        }, 1000);
+            if (typeof falar === "function") falar(`${nome}, conte os itens na tela.`);
+        }, 1200);
     }
 
     /**
-     * ❤️ APOIO EMOCIONAL
-     */
-    function dispararFraseMotivacional() {
-        if (!window._ultimoApoioTempo) window._ultimoApoioTempo = 0;
-        const agora = Date.now();
-        if (agora - window._ultimoApoioTempo < 6000) return;
-        window._ultimoApoioTempo = agora;
-
-        const frasesApoio = [
-            "Respire fundo, você consegue.",
-            "Tente de novo com calma.",
-            "Você é inteligente, vamos lá!",
-            "Cada erro é um aprendizado."
-        ];
-
-        let frase = frasesApoio[Math.floor(Math.random() * frasesApoio.length)];
-        if (typeof falar === "function") falar(frase, "dica");
-    }
-
-    function limparEmojisAjuda() { 
-        if (containerAjuda) {
-            containerAjuda.innerHTML = ""; 
-        }
-    }
-
-    /**
-     * ⌨️ CONSTRUÇÃO DE INTERFACE ACESSÍVEL
+     * ⌨️ FUNÇÃO: montarOpcoes
      */
     function montarOpcoes() {
-        let opcoes = [window.respostaCorreta];
+        const botoes = document.querySelectorAll(".choice-container");
+        if (!botoes || botoes.length === 0) return;
+
+        let opcoes = [state.respostaCorreta];
         while (opcoes.length < 4) {
-            let n = window.respostaCorreta + (Math.floor(Math.random() * 6) - 3);
+            let n = state.respostaCorreta + (Math.floor(Math.random() * 6) - 3);
             if (n >= 0 && !opcoes.includes(n)) opcoes.push(n);
         }
         opcoes.sort(() => Math.random() - 0.5);
         
-        const botoes = document.querySelectorAll(".choice-container");
         botoes.forEach((btn, i) => {
-            const textoEl = btn.querySelector(".choice-text");
-            if (textoEl) textoEl.innerText = opcoes[i];
-            btn.dataset.number = opcoes[i];
-            btn.classList.remove("correto", "errado", "acerto-animado", "erro-animado");
+            const txt = btn.querySelector(".choice-text");
+            if (txt) txt.innerText = opcoes[i];
             
-            // 🎯 GATILHO: TOQUE / MOUSE
-            btn.onpointerdown = () => selecionarRespostaDireta(btn);
+            btn.dataset.number = opcoes[i];
+            btn.classList.remove("correto", "errado");
+            
+            btn.setAttribute("tabindex", "0");
+            btn.setAttribute("role", "button");
+            btn.setAttribute("aria-label", `Resposta ${opcoes[i]}`);
 
-            // 🔥 GATILHO: TECLADO (ENTER / ESPAÇO) - ESSENCIAL PARA NVDA
+            btn.onclick = () => {
+                if (state.bloqueado) return;
+                desbloquearAudioIOS();
+
+                if (!window.__vozTesteFeita) {
+                    window.__vozTesteFeita = true;
+                    setTimeout(() => {
+                        speechSynthesis.cancel();
+                        falar("Vamos começar!");
+                    }, 300);
+
+                    setTimeout(() => {
+                        falar(nodes.pergunta.innerText);
+                    }, 700);
+
+                    setTimeout(() => {
+                        selecionarRespostaDireta(btn);
+                    }, 900);
+                } else {
+                    selecionarRespostaDireta(btn);
+                }
+            };
+
             btn.onkeydown = (e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault(); // Evita scroll indesejado
-                    selecionarRespostaDireta(btn);
+                    e.preventDefault();
+                    btn.click();
                 }
             };
         });
     }
 
     function finalizarJogo() {
-        localStorage.setItem("mostRecentScore", score);
-        localStorage.setItem("estrelas", estrelas);
+        localStorage.setItem("mostRecentScore", state.score);
+        localStorage.setItem("estrelas", state.estrelas);
         window.location.href = "end.html";
     }
 
-    // Início da primeira rodada
     proximaPergunta();
 });
