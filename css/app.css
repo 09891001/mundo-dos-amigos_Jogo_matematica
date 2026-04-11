@@ -1,164 +1,192 @@
-/* CONFIGURAÇÃO DE BASE - FOCO MOBILE */
-:root {
-    background-color: #f0f9ff; /* Azul bem clarinho para não cansar a vista */
-    font-size: 62.5%; /* Facilita o cálculo de tamanhos (1rem = 10px) */
+/**
+ * MUNDO DOS AMIGOS - ESTILIZAÇÃO BASE (V21.3.0)
+ * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - CUPERTINO PREMIUM LOOK
+ * ✅ FIX 1: Remoção de imagem de fundo real (Ruído Visual)
+ * ✅ FIX 2: Implementação de Fundo Controlado e Relaxante (TEA Friendly)
+ * ✅ FIX 3: Centralização e Escalonamento Profissional da Home
+ */
+
+ :root {
+    --primary: #4F46E5;
+    --primary-light: #6366F1;
+    --secondary: #22C55E;
+    --accent: #F59E0B;
+    --danger: #EF4444;
+
+    /* Fundo controlado: Substitui a imagem caótica */
+    --bg-app: #F8FAFC; 
+    
+    /* Cores de suporte para o novo gradiente controlado */
+    --bg-gradient-start: #F8FAFC;
+    --bg-gradient-mid: #EEF2FF;
+    --bg-gradient-end: #E0F2FE;
+
+    --card: rgba(255, 255, 255, 0.6);
+
+    --text: #1E293B;
+    --text-light: #64748B;
+
+    --radius-lg: 24px;
+    --radius-md: 20px;
+    --radius-sm: 14px;
+
+    --shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.06);
+    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+    font-size: 62.5%; 
 }
 
 * {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
-    color: #334155; /* Cor cinza escuro suave para leitura */
+    color: var(--text);
+    /* Renderização de texto premium */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-
-
-/* CABEÇALHOS (Tamanhos Grandes para TEA) */
-h1 {
-    font-size: 4.5rem;
-    color: #0284c7;
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-h2 {
-    font-size: 3.2rem;
-    margin-bottom: 3rem;
-    font-weight: 700;
-    text-align: center;
-}
-
-h3 {
-    font-size: 2.4rem;
-    font-weight: 500;
-    text-align: center;
-}
-
-
-
-/* UTILITÁRIOS DE LAYOUT (Ajustado para Celular) */
-.container {
-    width: 100%; /* Corrigido de 100vh para 100% */
+/* --- 🔥 CORREÇÃO CRÍTICA 1: FUNDO CONTROLADO (APPLE STYLE) --- */
+body {
+    /* Removemos qualquer referência a imagens reais anteriores */
+    background: linear-gradient(180deg, 
+        var(--bg-gradient-start) 0%, 
+        var(--bg-gradient-mid) 50%, 
+        var(--bg-gradient-end) 100%
+    );
+    background-attachment: fixed;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    max-width: 50rem; /* Limite de largura para não esticar demais */
-    margin: 0 auto;
-    padding: 2rem;
 }
 
-.flex-column {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.flex-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.hidden {
-    display: none !important;
-}
-
-
-
-/* BOTÕES DE MENU (Estilo Mobile-First) */
-.btn {
-    font-size: 2.2rem;
-    padding: 2rem;
-    width: 100%;
-    max-width: 35rem;
-    text-align: center;
-    border: none;
-    border-radius: 20px;
-    margin-bottom: 2rem;
-    text-decoration: none;
-    color: white;
-    background-color: #0ea5e9;
-    box-shadow: 0 8px 15px rgba(14, 165, 233, 0.2);
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-}
-
-.btn:active {
-    transform: scale(0.96); /* Feedback de toque no celular */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.btn[disabled] {
-    cursor: not-allowed;
-    background-color: #cbd5e1;
-    box-shadow: none;
-}
-
-
-
-/* FORMULÁRIOS E INPUTS (Caixas Grandes) */
-form {
-    width: 100%;
+/* --- ESTRUTURA: HOME CONTAINER (NATIVO LOOK) --- */
+.home-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    gap: 25px;
+    width: 100%;
+    max-width: 450px;
+    margin: auto;
+    /* Animação de entrada suave */
+    animation: fadeSlideUp 0.5s cubic-bezier(.4, 2, .6, 1);
 }
 
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- IMAGEM DE CAPA (CONTEXTUALIZADA) --- */
+.img-capa {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-strong);
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 3.8rem;
+    color: var(--primary);
+    text-align: center;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* --- INPUTS PREMIUM --- */
 input {
-    margin-bottom: 2rem;
-    width: 90%;
-    max-width: 35rem;
-    padding: 2rem;
-    font-size: 2rem;
-    border: 3px solid #bae6fd;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     text-align: center;
+    font-size: 1.8rem;
+    box-shadow: var(--shadow-soft);
     outline: none;
+    transition: all 0.3s ease;
 }
 
 input:focus {
-    border-color: #0ea5e9;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
 }
 
 input::placeholder {
-    color: #94a3b8;
+    color: var(--text-light);
+    opacity: 0.8;
 }
 
+/* --- BOTÕES DO MENU (PREMIUM GRADIENT) --- */
+.btn-modo {
+    width: 100%;
+    padding: 18px 25px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    font-weight: 800;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Proteção Touch Mobile */
+    -webkit-tap-highlight-color: transparent;
+}
 
+.btn-modo:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+}
 
-/* ESTILO DA FOTO DE PERFIL NO MENU */
+.btn-modo:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+    filter: brightness(1.1);
+}
+
+/* Botão Secundário Elegante (Glassmorphism) */
+.btn-secundario {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--primary);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* --- COMPONENTES GERAIS --- */
 #foto-jogador {
     width: 120px;
     height: 120px;
-    border-radius: 60px;
-    border: 5px solid #fff;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: var(--shadow-strong);
     object-fit: cover;
+    background-color: #e2e8f0;
 }
-.btn { /* Botões principais do menu (ajuste de espaçamento mobile) */
-    font-size: 2.2rem;
-    padding: 2rem;
-    width: 100%;
-    max-width: 35rem;
-    text-align: center;
-    border: none;
-    border-radius: 20px;
 
-    margin-bottom: 3rem; /* 🔥 AUMENTADO (ANTES ERA 2rem) */
-
-    text-decoration: none;
-    color: white;
-    background-color: #0ea5e9;
-    box-shadow: 0 8px 15px rgba(14, 165, 233, 0.2);
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 400px) {
+    h1 { font-size: 3rem; }
+    .btn-modo { padding: 15px 20px; font-size: 1.6rem; }
+}
+button:focus, input:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(79,70,229,0.25);
 }

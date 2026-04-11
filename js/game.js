@@ -1,12 +1,46 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V20.0.0)
- * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - DIAMOND PERFECTION EDITION
- * ✅ FIX: Feedback de clique em estado bloqueado (UX Refinada)
- * ✅ FIX: Controle Inteligente de Cancelamento (falarSeguro)
- * ✅ FIX: Áudio Adaptativo e Clima Emocional (sons.js integration)
- * ✅ FIX: Blindagem iOS (Handshake Profissional)
+ * MUNDO DOS AMIGOS - NÚCLEO DO JOGO (ENGINE UNIFICADA V20.8.0)
+ * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - JUICY EFFECTS EDITION
+ * ✅ NOVIDADE: Sistema de Confetes e Partículas de Clique
+ * ✅ NOVIDADE: Feedback Físico (Screen Shake) no Erro
+ * ✅ FIX: Estabilidade Diamond Perfection e Handshake iOS
  * ✅ INTEGRIDADE: 100% (Voz, Música, Acessibilidade, TEA)
  */
+
+// --- 🔥 FUNÇÕES DE EFEITOS ESPECIAIS (NÍVEL APP PREMIUM) ---
+
+function soltarConfete() {
+    const cores = ["#22C55E", "#4F46E5", "#F59E0B", "#EF4444"];
+    for (let i = 0; i < 25; i++) {
+        const confete = document.createElement("div");
+        confete.classList.add("confete");
+        confete.style.left = Math.random() * 100 + "vw";
+        confete.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+        confete.style.animationDuration = (Math.random() * 1 + 0.5) + "s";
+        document.body.appendChild(confete);
+        setTimeout(() => confete.remove(), 1200);
+    }
+}
+
+function particulaClique(x, y) {
+    const p = document.createElement("div");
+    p.style.position = "fixed";
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+    p.style.width = "8px";
+    p.style.height = "8px";
+    p.style.background = "#4F46E5";
+    p.style.borderRadius = "50%";
+    p.style.pointerEvents = "none";
+    p.style.zIndex = "9999";
+    p.style.transition = "all 0.5s ease";
+    document.body.appendChild(p);
+    setTimeout(() => {
+        p.style.transform = "translateY(-30px)";
+        p.style.opacity = "0";
+    }, 10);
+    setTimeout(() => p.remove(), 500);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Variáveis de Controle de Voz ---
@@ -209,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (acertou) {
             if (typeof tocarSomAcerto === "function") tocarSomAcerto();
+            soltarConfete(); // 🎉 Confetes de vitória
 
             botao.classList.add("correto", "acerto-animado");
             state.score += 10;
@@ -229,6 +264,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 1500);
         } else {
             if (typeof tocarSomErro === "function") tocarSomErro();
+            
+            // 💥 Feedback Físico (Shake)
+            document.body.classList.add("shake");
+            setTimeout(() => document.body.classList.remove("shake"), 300);
 
             botao.classList.add("errado", "erro-animado");
             state.acertosSeguidos = 0;
@@ -253,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function mostrarAjudaVisual() {
         if (!nodes.ajuda) return;
         const nome = localStorage.getItem("nomeJogador") || "Jogador";
-        let helpHTML = `<div id="visual-calculo" style="display:flex; flex-direction:column; align-items:center; gap:10px; animation: bounceIn 0.5s;">`;
+        let helpHTML = `<div id="visual-calculo" class="emoji-ajuda" style="display:flex; flex-direction:column; align-items:center; gap:10px; animation: bounceIn 0.5s;">`;
         const gerarEmojis = (n) => Array(n).fill(`<span style="font-size:1.5rem">${state.emojiAtual}</span>`).join("");
         
         if (state.operacao === "soma") {
@@ -289,8 +328,9 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.setAttribute("role", "button");
             btn.setAttribute("aria-label", `Resposta ${opcoes[i]}`);
 
-            btn.onclick = () => {
-                // ✅ MELHORIA FINAL: Feedback sonoro mesmo bloqueado
+            btn.onclick = (e) => {
+                particulaClique(e.clientX, e.clientY); // 💫 Partículas de clique
+
                 if (state.bloqueado) {
                     if (typeof tocarSomClique === "function") tocarSomClique();
                     return;

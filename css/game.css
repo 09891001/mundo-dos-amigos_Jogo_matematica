@@ -1,269 +1,289 @@
-/* 
- * MUNDO DOS AMIGOS - ESTILIZAÇÃO DO JOGO (V14.2.0)
- * 🔒 STATUS: CONSOLIDADO SÊNIOR
- * ✅ Responsividade Mobile/Desktop
- * ✅ Animações Pedagógicas
- * ✅ Acessibilidade (Focus States)
+/**
+ * MUNDO DOS AMIGOS - NÚCLEO VISUAL DO JOGO (V21.3.0)
+ * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - CUPERTINO PREMIUM LOOK
+ * ✅ FIX 1: Remoção de Borda Preta na Pergunta (Soft Shadow + Blur)
+ * ✅ FIX 2: Microinterações de Toque nos Botões (Press State)
+ * ✅ FIX 3: Peso Visual e Profundidade no Header
+ * ✅ FIX 4: Transições Suaves entre Estados de Jogo (Anti-seco)
  */
 
-:root {
-    --primary-color: #4CAF50;
-    --secondary-color: #2196F3;
-    --error-color: #f44336;
-    --bg-color: #f0f9ff;
-    --text-color: #333;
-    --white: #ffffff;
-    --shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+ :root {
+    --primary: #4F46E5;
+    --primary-light: #6366F1;
+    --secondary: #22C55E;
+    --danger: #EF4444;
+    --card: rgba(255, 255, 255, 0.55);
+    --radius: 20px;
+    --radius-lg: 24px;
+    
+    /* Shadow System Apple */
+    --shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.06);
+    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-tap-highlight-color: transparent; /* Fix para mobile */
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    /* 🔥 CORREÇÃO CRÍTICA 4: TRANSIÇÃO SUAVE (ANTI-SECO) */
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
     overflow-x: hidden;
+    color: #1E293B;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Header e Foto Perfil --- */
+/* --- ANIMAÇÕES CORE --- */
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shakeScreen {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes tapBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.92); }
+    100% { transform: scale(1); }
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    animation: fadeSlideUp 0.4s cubic-bezier(.4, 2, .6, 1);
+}
+
+.shake { animation: shakeScreen 0.3s; }
+
+/* --- 🔥 CORREÇÃO CRÍTICA 3: HEADER PREMIUM (PESO VISUAL) --- */
 .header-game {
     width: 100%;
     max-width: 800px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
+    padding: 16px;
+    /* Profundidade real estilo iPhone */
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 0 0 20px 20px;
+    /* Sombra mais forte para separar do conteúdo */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    /* Borda sutil de acabamento */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-sair {
     padding: 10px 20px;
-    background-color: var(--error-color);
-    color: var(--white);
+    background: linear-gradient(135deg, #EF4444, #F87171);
+    color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s;
+    box-shadow: var(--shadow-soft);
+    font-size: 1.4rem;
+    transition: transform 0.1s;
 }
 
-.btn-sair:hover {
-    transform: scale(1.05);
+.btn-sair:active {
+    transform: scale(0.95);
 }
 
 .foto-perfil-hud {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    border: 3px solid var(--white);
-    box-shadow: var(--shadow);
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     object-fit: cover;
 }
 
-/* --- HUD (Pontuação e Progresso) --- */
-.container {
-    width: 90%;
-    max-width: 600px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+/* --- HUD E CARDS PREMIUM (GLASS) --- */
+#hud, #area-ajuda-visual, .choice-container {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    /* Borda sutil de vidro para acabamento */
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 #hud {
+    width: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    background: var(--white);
-    padding: 15px;
-    border-radius: 20px;
-    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 25px;
 }
 
-.hud-item {
-    text-align: center;
-    flex: 1;
+.hud-item p {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text-light);
 }
 
+/* --- BARRA DE PROGRESSO --- */
 #progressBar {
-    width: 100%;
-    height: 15px;
-    background-color: #ddd;
+    width: 14rem;
+    height: 1.6rem;
     border-radius: 10px;
-    margin-top: 5px;
     overflow: hidden;
+    background: white;
+    margin-top: 5px;
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 #progressBarFull {
     height: 100%;
-    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    background: linear-gradient(90deg, #4F46E5, #22C55E);
+    border-radius: 10px;
     width: 0%;
-    transition: width 0.5s ease-in-out;
+    /* Transição elástica premium */
+    transition: width 0.6s cubic-bezier(.4, 2, .6, 1);
 }
 
-#estrelas {
-    font-weight: 900;
-    color: #ff9800;
-}
-
-/* --- Área da Pergunta --- */
+/* --- 🔥 CORREÇÃO CRÍTICA 1: PERGUNTA SEM BORDA PRETA --- */
 #question {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--primary);
     text-align: center;
-    margin: 20px 0;
-    color: var(--secondary-color);
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
-}
-
-#question:focus {
-    outline: 3px dashed var(--secondary-color);
-    outline-offset: 10px;
-}
-
-/* --- Área de Ajuda Visual (TEA Pedagogia) --- */
-#area-ajuda-visual {
-    min-height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    margin: 30px 0;
+    min-height: 80px;
+    
+    /* Removemos a borda web */
+    border: none;
+    
+    /* Adicionamos Soft Shadow + Blur (Apple Style) */
     background: rgba(255, 255, 255, 0.5);
-    border-radius: 20px;
-    padding: 15px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    backdrop-filter: blur(5px);
 }
 
-#visual-calculo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    animation: bounceIn 0.6s ease;
-}
-
-.linha-calculo {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.emoji-ajuda {
-    font-size: 2rem;
-}
-
-.sinal-calculo {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: var(--text-color);
-}
-
-/* --- Botões de Resposta (Grid) --- */
-.choices-grid {
+/* --- GRID DE RESPOSTAS --- */
+#choices-area {
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
-    margin-top: 20px;
 }
 
+/* 🔥 CORREÇÃO CRÍTICA 2: MICRO INTERAÇÃO DE TOQUE (PRESS STATE) */
 .choice-container {
-    background-color: var(--white);
-    border-radius: 20px;
     padding: 20px;
     text-align: center;
-    box-shadow: var(--shadow);
     cursor: pointer;
-    transition: all 0.2s;
-    border: 4px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90px;
+    
+    will-change: transform, box-shadow;
+    
+    /* Profundidade inicial sutil */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
 }
 
+/* Estado de Hover (Desktop) */
 .choice-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-strong);
+    background: rgba(255, 255, 255, 0.9);
 }
 
-.choice-container:focus {
-    outline: none;
-    border-color: var(--secondary-color);
+/* 🔥 Estado Ativo (Pressionado/Toque no iOS) */
+.choice-container:active {
+    /* Efeito de "afundar" levemente */
+    transform: translateY(1px) scale(0.97);
+    /* Sombra diminui para simular proximidade com o fundo */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* Feedback visual de cor sutil */
+    background: rgba(255, 255, 255, 0.4);
+    transition: all 0.1s ease;
 }
 
 .choice-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--secondary-color);
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--primary);
 }
 
-/* --- Estados de Feedback (Acerto e Erro) --- */
+/* --- FEEDBACK VISUAL (ACERTO/ERRO) --- */
 .correto {
-    background-color: #c8e6c9 !important;
-    border-color: #4caf50 !important;
+    background: linear-gradient(135deg, #22C55E, #4ADE80) !important;
+    border: none !important;
 }
+.correto .choice-text { color: white !important; }
 
 .errado {
-    background-color: #ffcdd2 !important;
-    border-color: #f44336 !important;
+    background: linear-gradient(135deg, #FCA5A5, #F87171) !important;
+    border: none !important;
+}
+.errado .choice-text { color: white !important; }
+
+/* --- EFEITOS ESPECIAIS (CONFESSO E AJUDA) --- */
+.confete {
+    position: fixed;
+    width: 10px; height: 10px;
+    top: -10px;
+    animation: cair 1s linear forwards;
+    z-index: 9999;
+    opacity: 0.8; 
 }
 
-/* --- Animações --- */
-@keyframes acerto-pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+@keyframes cair { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+#area-ajuda-visual {
+    width: 100%;
+    min-height: 120px;
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.acerto-animado {
-    animation: acerto-pop 0.4s ease;
-}
-
-@keyframes erro-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
-}
-
-.erro-animado {
-    animation: erro-shake 0.4s ease;
-}
-
-@keyframes bounceIn {
-    from { opacity: 0; transform: scale(0.3); }
-    50% { opacity: 0.9; transform: scale(1.1); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-.fade-in {
-    animation: bounceIn 0.5s ease;
-}
-
-/* --- Responsividade (Media Queries) --- */
-@media (max-width: 480px) {
-    #question {
-        font-size: 1.8rem;
-    }
-
-    .choice-text {
-        font-size: 1.5rem;
-    }
-
-    .emoji-ajuda {
-        font-size: 1.5rem;
-    }
-
-    .choice-container {
-        padding: 15px;
-    }
-}
-
-/* Estilo para Divisão em Grupos (Ajuste Pedagógico) */
-.grupo-divisao {
-    border: 2px dashed var(--primary-color);
-    padding: 10px;
-    border-radius: 15px;
-    margin: 5px;
+.emoji-ajuda {
+    font-size: 2.8rem;
     display: inline-block;
+    animation: floatEmoji 2s ease-in-out infinite;
+}
+
+@keyframes floatEmoji {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 500px) {
+    #question { font-size: 2.4rem; }
+    #choices-area { grid-template-columns: 1fr; }
+    .choice-container { padding: 15px; min-height: 80px; }
 }
