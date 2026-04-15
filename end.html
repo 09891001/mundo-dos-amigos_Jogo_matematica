@@ -4,37 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mundo dos Amigos - Fim de Jogo</title>
+    <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/game.css">
-    <link rel="stylesheet" href="css/highscores.css">
+    <style>
+        /* ✅ PADRONIZAÇÃO APP FEELING: Transição suave de entrada */
+        body {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh;
+            background: linear-gradient(135deg, #F8FAFC, #EEF2FF, #E0F2FE);
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        .avatar-final-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        #foto-final {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid white;
+            box-shadow: var(--shadow-strong);
+            object-fit: cover;
+        }
+
+        .menu-final {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        #finalScore {
+            font-size: 8rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1;
+        }
+    </style>
 </head>
 <body>
-    <div class="container flex-center flex-column">
-        <main id="end" class="flex-center flex-column">
+    <div class="home-container">
+        <main id="end" class="flex-center flex-column" style="text-align: center; width: 100%;">
+            <p style="font-size: 1.8rem; font-weight: 700; color: var(--text-light);">SEU PLACAR</p>
             <h1 id="finalScore">0</h1>
-            <p>Parabéns! Você completou o desafio!</p>
+            <p style="font-size: 2rem; font-weight: 600; margin-bottom: 20px;">🎉 Parabéns! Você completou!</p>
             
             <div class="avatar-final-container">
                 <img id="foto-final" src="img/avatar-padrao.png" alt="Avatar do Jogador">
-                <h2 id="nome-final">Jogador</h2>
+                <h2 id="nome-final" style="font-size: 2.4rem; color: var(--primary);">Jogador</h2>
             </div>
 
             <div class="menu-final">
-                <button class="btn" id="btnReiniciar">Jogar Novamente</button>
-                <button class="btn" id="btnHome">Menu Inicial</button>
+                <button class="btn-modo" id="btnReiniciar">JOGAR NOVAMENTE</button>
+                <button class="btn-modo btn-secundario" id="btnHome">MENU INICIAL</button>
             </div>
         </main>
     </div>
 
-    <!-- Firebase SDKs (Versão 8 para compatibilidade) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <!-- Scripts de Lógica -->
-    <script src="js/firebase.js"></script>
-    <script src="js/voz.js"></script>
     <script src="js/sons.js"></script>
-
+    <script src="js/voz.js"></script>
+    
     <script>
+        /**
+         * LÓGICA DE ENCERRAMENTO (V22.0.0)
+         * 🔒 STATUS: ENGENHARIA SÊNIOR - COMPATIBILIDADE TOTAL
+         */
         document.addEventListener("DOMContentLoaded", () => {
             const finalScoreElement = document.getElementById("finalScore");
             const nomeFinalElement = document.getElementById("nome-final");
@@ -42,39 +90,38 @@
             const btnReiniciar = document.getElementById("btnReiniciar");
             const btnHome = document.getElementById("btnHome");
 
-            // 1. RECUPERAR DADOS DO LOCALSTORAGE
+            // 1. RECUPERAR DADOS DO LOCALSTORAGE (Sincronizado com game.js)
             const mostRecentScore = localStorage.getItem("mostRecentScore") || 0;
             const nomeUsuario = localStorage.getItem("nomeJogador") || "Amigo";
             const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            const materia = localStorage.getItem("materiaAtual") || "Soma";
+            const modo = localStorage.getItem("modoJogo") || "Soma";
 
             // 2. ATUALIZAR INTERFACE
             finalScoreElement.innerText = mostRecentScore;
             nomeFinalElement.innerText = nomeUsuario;
             fotoFinalElement.src = fotoSalva;
 
-            // 3. SALVAMENTO FINAL NO FIREBASE (Backup de Segurança)
-            if (typeof salvarProgresso === "function") {
-                // Salva o score final como fase 30 (Concluído)
-                salvarProgresso(nomeUsuario, 30, parseInt(mostRecentScore));
-                console.log("[SISTEMA]: Score final sincronizado com Firebase.");
-            }
-
-            // 4. FEEDBACK DE VOZ
+            // 3. FEEDBACK DE VOZ (Estilo Apple)
             if (typeof falar === "function") {
-                falar(`Parabéns ${nomeUsuario}! Você fez ${mostRecentScore} pontos em ${materia}!`);
+                // Pequeno delay para a voz não cortar o efeito visual
+                setTimeout(() => {
+                    falar(`Parabéns ${nomeUsuario}! Você completou o desafio de ${modo} e fez ${mostRecentScore} pontos!`);
+                }, 500);
             }
 
-            // 5. NAVEGAÇÃO
+            // 4. NAVEGAÇÃO E SONS
             btnReiniciar.onclick = () => {
                 if (typeof tocarSom === "function") tocarSom('clique');
                 window.location.href = "game.html";
             };
 
             btnHome.onclick = () => {
-                if (typeof tocarSom === "function") tocarSom('sair');
+                if (typeof tocarSom === "function") tocarSom('clique');
                 window.location.href = "index.html";
             };
+
+            // 🔥 5. ATIVAÇÃO DA TRANSIÇÃO SUAVE (FADE-IN)
+            document.body.classList.add("loaded");
         });
     </script>
 </body>

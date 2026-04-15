@@ -2,82 +2,84 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo dos Amigos - Jogando</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Mundo dos Amigos — Jogar</title>
     <link rel="stylesheet" href="css/game.css">
+    <style>body{opacity:0;transition:opacity 0.3s ease;}body.loaded{opacity:1;}</style>
 </head>
-<body class="tema-nivel-1">
-
+<body>
     <header class="header-game">
-        <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">Sair</button>
-        <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto do jogador" class="foto-perfil-hud">
+        <button class="btn-sair" id="btnSair" aria-label="Sair do jogo">← Sair</button>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button id="btn-mudo" aria-label="Mudo">🔊</button>
+            <div class="header-right">
+                <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto" class="foto-perfil-hud">
+                <span id="conquistas-count">🏆 0</span>
+            </div>
+        </div>
     </header>
-
     <main class="container">
         <section id="hud" aria-label="Informações do jogo">
             <div class="hud-item">
                 <p id="progressText">Fase 1/30</p>
-                <div id="progressBar" role="progressbar" aria-valuemin="1" aria-valuemax="30">
-                    <div id="progressBarFull"></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <p>⭐ <span id="estrelas">0</span></p>
+                    <p>🎯 <span id="score">0</span></p>
                 </div>
             </div>
-            <div class="hud-item">
-                <p>Pontos: <span id="score">0</span></p>
-                <p>⭐ <span id="estrelas">0</span></p>
+            <div id="progressBar" role="progressbar" aria-valuemin="1" aria-valuemax="30">
+                <div id="progressBarFull"></div>
             </div>
+            <div id="combo-display" aria-live="polite"></div>
         </section>
-
-        <h2 id="question" tabindex="-1" aria-live="assertive">Carregando pergunta...</h2>
-
-        <section id="area-ajuda-visual" aria-live="assertive" aria-label="Ajuda visual da conta">
-            </section>
-
-        <section id="choices-area" role="group" aria-label="Opções de resposta">
-            <div class="choice-container" data-number="0" role="button" tabindex="0">
-                <p class="choice-text">0</p>
-            </div>
-            <div class="choice-container" data-number="0" role="button" tabindex="0">
-                <p class="choice-text">0</p>
-            </div>
-            <div class="choice-container" data-number="0" role="button" tabindex="0">
-                <p class="choice-text">0</p>
-            </div>
-            <div class="choice-container" data-number="0" role="button" tabindex="0">
-                <p class="choice-text">0</p>
-            </div>
+        <h2 id="question" tabindex="-1" aria-live="assertive">Carregando...</h2>
+        <section id="area-ajuda-visual" aria-live="polite" aria-label="Objetos para contar"></section>
+        <section id="choices" class="choices-grid" aria-label="Opções de resposta">
+            <div class="choice-container" role="button" tabindex="0"><p class="choice-text">?</p></div>
+            <div class="choice-container" role="button" tabindex="0"><p class="choice-text">?</p></div>
+            <div class="choice-container" role="button" tabindex="0"><p class="choice-text">?</p></div>
+            <div class="choice-container" role="button" tabindex="0"><p class="choice-text">?</p></div>
         </section>
     </main>
-
     <script src="js/sons.js"></script>
     <script src="js/voz.js"></script>
+    <script src="js/apoio.js"></script>
+    <script src="js/conquistas.js"></script>
     <script src="js/game.js"></script>
-
     <script>
-        /**
-         * LÓGICA DE INTERFACE DA PÁGINA
-         */
-        document.addEventListener("DOMContentLoaded", () => {
-            const btnSair = document.getElementById("btnSair");
-            const fotoHud = document.getElementById("foto-jogador");
-
-            // 1. Carregar foto do perfil do LocalStorage
-            const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            if (fotoHud) {
-                fotoHud.src = fotoSalva;
-            }
-
-            // 2. Controle do botão Sair com confirmação e feedback sonoro
-            if (btnSair) {
-                btnSair.addEventListener("click", () => {
-                    if (confirm("Deseja mesmo sair? Seu progresso nesta partida não será salvo.")) {
-                        if (typeof sons !== 'undefined' && sons.sair) {
-                            sons.sair.play().catch(() => {});
-                        }
-                        window.location.href = "index.html";
-                    }
-                });
-            }
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+        const foto = localStorage.getItem('fotoJogador') || 'img/avatar-padrao.png';
+        const fotoEl = document.getElementById('foto-jogador');
+        if (fotoEl) fotoEl.src = foto;
+        function atualizarConq() {
+            const el = document.getElementById('conquistas-count');
+            if (el) el.textContent = '🏆 ' + JSON.parse(localStorage.getItem('conquistas')||'[]').length;
+        }
+        atualizarConq();
+        setInterval(atualizarConq, 1200);
+        const btnMudo = document.getElementById('btn-mudo');
+        function sincMudo() { if(btnMudo) btnMudo.textContent = localStorage.getItem('mutado')==='true'?'🔇':'🔊'; }
+        if (btnMudo) { btnMudo.onclick = () => { if(typeof toggleMudo==='function')toggleMudo(); sincMudo(); }; }
+        sincMudo();
+        const btnSair = document.getElementById('btnSair');
+        if (btnSair) {
+            btnSair.addEventListener('click', () => {
+                if (confirm('Sair? O progresso desta partida não será salvo.')) {
+                    if(typeof tocarSomClique==='function')tocarSomClique();
+                    if(typeof pararVoz==='function')pararVoz();
+                    document.body.classList.add('fade-out');
+                    setTimeout(() => window.location.href = 'index.html', 320);
+                }
+            });
+        }
+        document.addEventListener('pointerdown', () => {
+            if(typeof gerenciarMusicaFundo==='function') gerenciarMusicaFundo(1);
+        }, { once: true });
+        document.body.classList.add('loaded');
+    });
     </script>
 </body>
 </html>

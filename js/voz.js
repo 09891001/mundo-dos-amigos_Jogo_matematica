@@ -1,171 +1,120 @@
 /**
- * SISTEMA DE VOZ CENTRALIZADO - MUNDO DOS AMIGOS
- * 🔒 VERSÃO: 4.7.0 - FIX DEFINITIVO IPHONE (VOICE SELECTION & DEPLOY)
- * RESPONSÁVEL: Engenheiro de Software Sênior
+ * MUNDO DOS AMIGOS — VOZ (V5.1.0 ULTRA)
+ * ✅ iOS/Safari: handshake após interação, vozes carregadas async
+ * ✅ Fila com guardião anti-travamento (iOS não dispara onend)
+ * ✅ Detecção de leitor de tela (VoiceOver, TalkBack)
+ * ✅ Cancelamento seguro entre telas
  */
 
-let falando = false;
-let vozLiberada = false;
-let filaFalas = [];
+let _vozLiberada = false;
+let _falando     = false;
+let _fila        = [];
+let _guardiao    = null;
 
-/**
- * 🕵️ DETECÇÃO DE LEITOR DE TELA
- * Evita duplicidade sonora com VoiceOver, TalkBack ou NVDA.
- */
 function detectarLeitorTela() {
-    return (
-        /VoiceOver|TalkBack|NVDA|JAWS/i.test(navigator.userAgent)
-    );
+    return /VoiceOver|TalkBack|NVDA|JAWS/i.test(navigator.userAgent);
 }
 
-/**
- * 🔓 FUNÇÃO: liberarVoz
- * Handshake essencial para o iOS habilitar o áudio via PointerDown.
- */
-function liberarVoz() { 
-    if (vozLiberada) return;
+// ─── DESBLOQUEIO ─────────────────────────────────────────────────────────────
+function liberarVoz() {
+    if (_vozLiberada) return;
+    if (!('speechSynthesis' in window)) { _vozLiberada = true; return; }
 
-    try {
-        if (!('speechSynthesis' in window)) return;
-        const synth = window.speechSynthesis;
-        
-        const handshake = () => {
-            const vozes = synth.getVoices();
-            
-            // iOS carrega as vozes assincronamente após a primeira interação
-            if (vozes.length === 0) {
-                setTimeout(handshake, 100);
-                return;
-            }
-
-            // Ativa o hardware com um comando vazio e silencioso
-            const msgSilenciosa = new SpeechSynthesisUtterance("");
-            msgSilenciosa.volume = 0;
-            synth.speak(msgSilenciosa);
-            
-            vozLiberada = true;
-            console.log("[VOZ]: Sistema desbloqueado com sucesso (Produção).");
-            processarFila();
-        };
-
-        handshake();
-    } catch (e) {
-        console.error("[VOZ ERRO]: Falha na inicialização do hardware:", e);
-    }
-}
-
-/**
- * 🎯 GATILHOS DE DESBLOQUEIO
- * Pointerdown é o evento prioritário para Safari moderno.
- */
-document.addEventListener("pointerdown", liberarVoz, { once: true });
-document.addEventListener("touchstart", liberarVoz, { once: true });
-document.addEventListener("click", liberarVoz, { once: true });
-
-/**
- * 🗣️ FUNÇÃO: falar
- * Organiza as mensagens na fila de processamento.
- */
-function falar(texto, tipo = "neutro", callback = null) {
-    if (detectarLeitorTela()) {
-        if (callback) callback();
-        return;
-    }
-
-    filaFalas.push({ texto, tipo, callback });
-    processarFila();
-}
-
-/**
- * ⚙️ PROCESSADOR DE FILA
- * Gerencia a reprodução sequencial e força seleção de voz para o iOS.
- */
-function processarFila() {
-    if (falando || filaFalas.length === 0 || !vozLiberada) return;
-
-    const item = filaFalas.shift();
     const synth = window.speechSynthesis;
-    const msg = new SpeechSynthesisUtterance(item.texto);
-    
-    msg.lang = "pt-BR";
 
-    // 🔥 FIX IPHONE: Força seleção de voz válida (Crítico para Deploy/GitHub Pages)
-    const vozes = synth.getVoices();
-    const vozPT = vozes.find(v => v.lang === "pt-BR") 
-               || vozes.find(v => v.lang.includes("pt")) 
-               || vozes[0];
+    function handshake() {
+        synth.cancel();
+        const vozes = synth.getVoices();
+        if (vozes.length === 0) { setTimeout(handshake, 150); return; }
 
-    if (vozPT) {
-        msg.voice = vozPT;
+        const msg = new SpeechSynthesisUtterance(' ');
+        msg.volume = 0; msg.rate = 2;
+        msg.onend  = () => { _vozLiberada = true; _processarFila(); };
+        msg.onerror = () => { _vozLiberada = true; _processarFila(); };
+        synth.speak(msg);
     }
-
-    falando = true;
-
-    // Ajustes de entonação para suporte TEA
-    if (item.tipo === "festa") { 
-        msg.pitch = 1.2; 
-        msg.rate = 1.0; 
-    } else if (item.tipo === "dica") { 
-        msg.pitch = 1.0; 
-        msg.rate = 0.85; // Mais lento para suporte pedagógico
-    } else { 
-        msg.pitch = 1.1; 
-        msg.rate = 1.0; 
-    }
-
-    msg.onend = () => {
-        falando = false;
-        if (item.callback) item.callback();
-        processarFila(); 
-    };
-
-    msg.onerror = (event) => {
-        // Ignora erros de interrupção comuns no mobile
-        if (event.error === "interrupted" || event.error === "canceled") {
-            falando = false;
-            processarFila();
-            return;
-        }
-        console.error("[VOZ ERRO REAL]:", event);
-        falando = false;
-        processarFila();
-    };
-
-    synth.speak(msg);
+    handshake();
 }
 
-/**
- * 🛡️ FUNÇÃO: falarSeguro
- * Garante que a fala ocorra mesmo que o handshake ainda esteja processando.
- */
-function falarSeguro(texto, tipo = "neutro", callback = null) {
-    if (!vozLiberada) {
-        setTimeout(() => falarSeguro(texto, tipo, callback), 800);
-        return;
-    }
+['pointerdown','touchstart','click'].forEach(ev =>
+    document.addEventListener(ev, liberarVoz, { once: true })
+);
+
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        if (!_vozLiberada) liberarVoz();
+    };
+}
+
+// ─── API PÚBLICA ─────────────────────────────────────────────────────────────
+function falar(texto, tipo = 'neutro', callback = null) {
+    if (!texto || detectarLeitorTela()) { if (callback) callback(); return; }
+    _fila.push({ texto, tipo, callback });
+    _processarFila();
+}
+
+function falarSeguro(texto, tipo = 'neutro', callback = null) {
+    if (!_vozLiberada) { setTimeout(() => falarSeguro(texto, tipo, callback), 400); return; }
+    // Limpa fila e cancela fala atual para priorizar
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    _fila = []; _falando = false;
     falar(texto, tipo, callback);
 }
 
-/**
- * API DE NARRAÇÃO RÁPIDA
- */
-function narrar(texto) { 
-    falar(texto, "neutro"); 
+function pararVoz() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    clearTimeout(_guardiao);
+    _fila = []; _falando = false;
 }
 
-function narrarAcerto() {
-    const nome = localStorage.getItem("nomeJogador") || "Amigo";
-    falar(`${nome}, você acertou!`, "festa");
-}
+// ─── FILA ────────────────────────────────────────────────────────────────────
+function _processarFila() {
+    if (_falando || _fila.length === 0 || !_vozLiberada) return;
 
-function narrarErro() {
-    const nome = localStorage.getItem("nomeJogador") || "Amigo";
-    falar(`${nome}, tente de novo com calma.`, "dica");
-}
+    const synth = window.speechSynthesis;
+    if (synth.speaking) { synth.cancel(); setTimeout(_processarFila, 150); return; }
 
-// Sincronização de vozes (Necessário para alguns navegadores carregarem a lista)
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.onvoiceschanged = () => {
-        console.log("[VOZ]: Dicionário de vozes sincronizado.");
+    const item = _fila.shift();
+    const msg  = new SpeechSynthesisUtterance(item.texto);
+    msg.lang   = 'pt-BR';
+
+    // Seleciona voz pt-BR (crítico iOS)
+    const vozes = synth.getVoices();
+    const voz   = vozes.find(v => v.lang === 'pt-BR')
+               || vozes.find(v => v.lang.startsWith('pt'))
+               || (vozes[0] || null);
+    if (voz) msg.voice = voz;
+
+    // Entonação
+    const cfg = { festa: [1.3,1.0,1.0], dica: [1.0,0.8,0.95], alerta: [0.9,0.85,1.0], neutro: [1.1,0.95,1.0] };
+    const [pitch, rate, volume] = cfg[item.tipo] || cfg.neutro;
+    msg.pitch = pitch; msg.rate = rate; msg.volume = volume;
+
+    _falando = true;
+
+    // ⏱️ Guardião iOS (iOS pode não disparar onend)
+    const dur = Math.max(2500, item.texto.length * 75);
+    _guardiao = setTimeout(() => {
+        if (_falando) { _falando = false; if (item.callback) item.callback(); _processarFila(); }
+    }, dur);
+
+    msg.onend = () => {
+        clearTimeout(_guardiao);
+        _falando = false;
+        if (item.callback) item.callback();
+        _processarFila();
     };
+    msg.onerror = (e) => {
+        clearTimeout(_guardiao);
+        _falando = false;
+        if (e.error !== 'interrupted' && e.error !== 'canceled') console.warn('[VOZ]', e.error);
+        _processarFila();
+    };
+
+    try { synth.speak(msg); } catch(e) { clearTimeout(_guardiao); _falando = false; _processarFila(); }
 }
+
+// Helpers legados
+function narrar(t) { falar(t, 'neutro'); }
+function narrarAcerto() { falar(`${localStorage.getItem('nomeJogador')||'Amigo'}, você acertou!`, 'festa'); }
+function narrarErro()   { falar(`${localStorage.getItem('nomeJogador')||'Amigo'}, tente de novo.`,  'dica'); }

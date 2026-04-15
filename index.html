@@ -2,149 +2,188 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo dos Amigos - Início</title>
-        <link rel="stylesheet" href="css/game.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Mundo dos Amigos</title>
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
-    <main class="container">
-        <div 
-            id="perfil-container" 
-            role="button" 
-            tabindex="0" 
-            aria-label="Alterar foto do jogador"
-        >
-            <img 
-                id="foto-jogador" 
-                src="img/avatar-padrao.png" 
-                alt="Sua foto de perfil"
-            >
-            <p>Toque na foto para mudar</p>
-            <input 
-                type="file" 
-                id="inputFoto" 
-                accept="image/*"
-                style="display:none"
-            >
+<button id="btn-mudo" aria-label="Ligar/desligar som">🔊</button>
+
+<main class="home-container">
+
+    <div id="perfil-container" role="button" tabindex="0" aria-label="Alterar foto de perfil">
+        <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto de perfil">
+        <p>👆 Toque para mudar a foto</p>
+        <input type="file" id="inputFoto" accept="image/*" style="display:none">
+    </div>
+
+    <h1 class="titulo-home">Mundo dos Amigos! 🌍</h1>
+
+    <button class="badge-conquistas" id="badge-conquistas" onclick="abrirModalConquistas()">
+        🏆 <span id="texto-conquistas">0 Conquistas</span>
+    </button>
+
+    <input
+        type="text" id="nomeJogador"
+        placeholder="✏️ Qual é o seu nome?"
+        maxlength="15" autocomplete="off"
+        aria-label="Digite seu nome"
+    >
+
+    <nav class="menu-materias" role="navigation" aria-label="Escolha a operação">
+        <button class="btn-destaque" data-materia="soma">➕ SOMA</button>
+        <button class="btn-destaque" data-materia="subtracao">➖ SUBTRAÇÃO</button>
+        <button class="btn-destaque" data-materia="divisao">➗ DIVISÃO</button>
+    </nav>
+
+    <div class="info-card">🎮 30 fases &nbsp;·&nbsp; ⭐ Estrelas &nbsp;·&nbsp; 🏆 14 Conquistas</div>
+
+</main>
+
+<div id="modal-conquistas" style="display:none"></div>
+
+<script src="js/sons.js"></script>
+<script src="js/voz.js"></script>
+<script>
+const inputNome   = document.getElementById('nomeJogador');
+const botoes      = document.querySelectorAll('.btn-destaque');
+const perfilBtn   = document.getElementById('perfil-container');
+const inputFoto   = document.getElementById('inputFoto');
+const fotoJogador = document.getElementById('foto-jogador');
+const textoConq   = document.getElementById('texto-conquistas');
+const btnMudo     = document.getElementById('btn-mudo');
+
+// Avatar
+perfilBtn.onclick = () => inputFoto.click();
+inputFoto.onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+        fotoJogador.src = ev.target.result;
+        localStorage.setItem('fotoJogador', ev.target.result);
+        if (typeof tocarSomClique === 'function') tocarSomClique();
+    };
+    r.readAsDataURL(f);
+};
+
+// Mudo
+function sincMudo() {
+    const m = localStorage.getItem('mutado') === 'true';
+    btnMudo.textContent = m ? '🔇' : '🔊';
+}
+btnMudo.onclick = () => {
+    if (typeof toggleMudo === 'function') toggleMudo();
+    sincMudo();
+    if (typeof tocarSomClique === 'function') tocarSomClique();
+};
+sincMudo();
+
+// Badge conquistas
+function atualizarBadge() {
+    const t = JSON.parse(localStorage.getItem('conquistas') || '[]').length;
+    textoConq.textContent = t === 0 ? '0 Conquistas' : `${t} Conquista${t>1?'s':''}!`;
+}
+
+// Modal conquistas
+const DEF = [
+    {id:'primeiro_acerto',icone:'⭐',titulo:'Primeira Estrela',  desc:'Acertou pela primeira vez!'},
+    {id:'combo_3',        icone:'🔥',titulo:'Em Chamas!',        desc:'3 acertos seguidos!'},
+    {id:'combo_5',        icone:'💥',titulo:'Combo x5',          desc:'5 acertos seguidos!'},
+    {id:'combo_10',       icone:'🌟',titulo:'Imbatível',         desc:'10 acertos seguidos!'},
+    {id:'fase_5',         icone:'🚀',titulo:'Decolando!',        desc:'Chegou na fase 5!'},
+    {id:'fase_10',        icone:'🏅',titulo:'Persistente',       desc:'Chegou na fase 10!'},
+    {id:'fase_20',        icone:'🥇',titulo:'Campeão',           desc:'Chegou na fase 20!'},
+    {id:'pontos_50',      icone:'💎',titulo:'50 Pontos',         desc:'Acumulou 50 pontos!'},
+    {id:'pontos_150',     icone:'👑',titulo:'150 Pontos',        desc:'150 pontos!'},
+    {id:'pontos_300',     icone:'🌈',titulo:'300 Pontos',        desc:'300 pontos! Lenda!'},
+    {id:'sem_erro_10',    icone:'🎯',titulo:'Perfeito!',         desc:'10 acertos sem errar!'},
+    {id:'velocidade',     icone:'⚡',titulo:'Veloz!',            desc:'Respondeu em menos de 3s!'},
+    {id:'divisao_mestre', icone:'🧮',titulo:'Mestre da Divisão', desc:'5 divisões seguidas!'},
+    {id:'completo',       icone:'🎓',titulo:'Formado!',          desc:'Completou as 30 fases!'},
+];
+
+function abrirModalConquistas() {
+    if (typeof tocarSomClique === 'function') tocarSomClique();
+    const modal  = document.getElementById('modal-conquistas');
+    const desbloq = new Set(JSON.parse(localStorage.getItem('conquistas') || '[]'));
+    modal.innerHTML = `
+    <div onclick="if(event.target===this)fecharModal()" style="
+        position:fixed;inset:0;background:rgba(0,0,0,0.65);
+        z-index:99999;display:flex;align-items:center;justify-content:center;
+        padding:16px;backdrop-filter:blur(8px);animation:fIn .2s ease;">
+      <div style="background:linear-gradient(145deg,#0d1b2a,#1a2744);border-radius:28px;padding:22px;
+          width:100%;max-width:380px;max-height:82dvh;overflow-y:auto;
+          border:1.5px solid rgba(255,215,0,.3);box-shadow:0 30px 80px rgba(0,0,0,.6);animation:sUp .35s cubic-bezier(.175,.885,.32,1.275);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div style="color:#FFD700;font-weight:900;font-size:1.5rem;">🏆 Conquistas</div>
+            <div style="color:rgba(255,255,255,.5);font-size:.82rem;margin-top:2px;">${desbloq.size}/${DEF.length} desbloqueadas</div>
+          </div>
+          <button onclick="fecharModal()" style="background:rgba(255,255,255,.1);border:none;color:white;font-size:1.3rem;cursor:pointer;border-radius:50%;width:34px;height:34px;">✕</button>
         </div>
+        ${DEF.map(c => {
+            const ok = desbloq.has(c.id);
+            return `<div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;margin-bottom:7px;
+                background:${ok?'rgba(255,215,0,.08)':'rgba(255,255,255,.03)'};
+                border:1.5px solid ${ok?'rgba(255,215,0,.22)':'transparent'};">
+              <span style="font-size:1.85rem;flex-shrink:0;filter:${ok?'none':'grayscale(1) opacity(.22)'};">${c.icone}</span>
+              <div style="flex:1;">
+                <div style="color:${ok?'#f8fafc':'#555'};font-weight:800;font-size:.93rem;">${c.titulo}</div>
+                <div style="color:${ok?'rgba(255,255,255,.55)':'#3a3a3a'};font-size:.76rem;margin-top:1px;">${c.desc}</div>
+              </div>
+              ${ok?'<span style="color:#22C55E;font-size:1rem;">✓</span>':'<span style="color:#2a2a2a;">🔒</span>'}
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <style>@keyframes fIn{from{opacity:0}to{opacity:1}}@keyframes sUp{from{transform:translateY(28px) scale(.95);opacity:0}to{transform:none;opacity:1}}</style>`;
+    modal.style.display = 'block';
+}
 
-        <h1>Olá Amigo!</h1>
+function fecharModal() {
+    const m = document.getElementById('modal-conquistas');
+    m.style.display = 'none'; m.innerHTML = '';
+}
 
-        <input 
-            type="text" 
-            id="nomeJogador" 
-            placeholder="Qual o seu nome?" 
-            maxlength="15"
-            autocomplete="off"
-            aria-label="Digite seu nome"
-        >
+// Iniciar jogo
+function iniciar(materia) {
+    const raw  = inputNome.value.trim();
+    const nome = !raw ? 'Jogador' : raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+    if (typeof tocarSomClique === 'function') tocarSomClique();
+    localStorage.setItem('nomeJogador', nome);
+    localStorage.setItem('modoJogo', materia);
+    if (!localStorage.getItem('fotoJogador')) localStorage.setItem('fotoJogador', 'img/avatar-padrao.png');
+    if (typeof falar === 'function') falar(`Olá ${nome}! Vamos jogar!`, 'festa');
+    botoes.forEach(b => b.disabled = true);
+    document.body.classList.add('fade-out');
+    setTimeout(() => window.location.href = 'game.html', 380);
+}
 
-        <nav class="menu-materias" role="navigation" aria-label="Escolha uma operação">
-            <button class="btn btn-destaque" data-materia="soma">SOMA (+)</button>
-            <button class="btn btn-destaque" data-materia="subtracao">SUBTRAÇÃO (−)</button>
-            <button class="btn btn-destaque" data-materia="divisao">DIVISÃO (÷)</button>
-        </nav>
-    </main>
+botoes.forEach(b => b.addEventListener('click', () => iniciar(b.dataset.materia)));
+inputNome.addEventListener('keypress', e => { if(e.key==='Enter') iniciar('soma'); });
 
-    <script src="js/sons.js"></script>
-    <script src="js/voz.js"></script>
+window.addEventListener('load', () => {
+    const nome = localStorage.getItem('nomeJogador');
+    const foto = localStorage.getItem('fotoJogador');
+    if (nome && nome !== 'Jogador') inputNome.value = nome;
+    if (foto) fotoJogador.src = foto;
+    atualizarBadge();
+    document.body.classList.add('loaded');
+    document.addEventListener('pointerdown', () => {
+        if (typeof gerenciarMusicaFundo === 'function') gerenciarMusicaFundo('home');
+    }, { once: true });
+});
 
-    <script>
-        /**
-         * 1. DESBLOQUEIO DE ÁUDIO PADRONIZADO
-         * Ativa o sistema de som no primeiro toque do usuário.
-         */
-        document.addEventListener("pointerdown", () => {
-            if (typeof liberarAudio === "function") liberarAudio();
-            if (typeof liberarVoz === "function") liberarVoz();
-
-            if (typeof gerenciarMusicaFundo === "function") {
-                gerenciarMusicaFundo("home");
-            }
-        }, { once: true });
-
-        // --- Seleção de Elementos ---
-        const inputFoto = document.getElementById("inputFoto");
-        const fotoJogador = document.getElementById("foto-jogador");
-        const perfilContainer = document.getElementById("perfil-container");
-        const inputNome = document.getElementById("nomeJogador");
-        const botoes = document.querySelectorAll(".btn-destaque");
-
-        // 2. GESTÃO DE FOTO DE PERFIL
-        perfilContainer.addEventListener("click", () => inputFoto.click());
-
-        inputFoto.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const base64 = event.target.result;
-                    fotoJogador.src = base64;
-                    localStorage.setItem("fotoJogador", base64);
-                    if (typeof tocarSom === "function") tocarSom('clique');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        /**
-         * 3. INICIALIZAÇÃO DO JOGO (FUNÇÃO CORRIGIDA V12.0)
-         * Padroniza o nome (ex: "joão" -> "João") e alinha fallbacks.
-         */
-        function iniciar(materia) {
-            let nomeRaw = inputNome.value.trim();
-            let nome;
-
-            // 🔒 Fallback padrão alinhado com game.js
-            if (!nomeRaw) {
-                nome = "Jogador";
-            } else {
-                // 🔥 Padronização: Primeira Letra Maiúscula, demais minúsculas
-                nome = nomeRaw.charAt(0).toUpperCase() + nomeRaw.slice(1).toLowerCase();
-            }
-
-            if (typeof tocarSom === "function") tocarSom('clique');
-
-            // Persistência de dados
-            localStorage.setItem("nomeJogador", nome);
-            localStorage.setItem("modoJogo", materia);
-
-            if (!localStorage.getItem("fotoJogador")) {
-                localStorage.setItem("fotoJogador", "img/avatar-padrao.png");
-            }
-
-            // Feedback por voz
-            if (typeof falar === "function") {
-                falar(`Olá ${nome}, vamos jogar ${materia}!`);
-            }
-
-            // UI Feedback
-            botoes.forEach(b => b.disabled = true);
-
-            setTimeout(() => {
-                window.location.href = "game.html";
-            }, 1000);
-        }
-
-        // 4. ATRIBUIÇÃO DE EVENTOS
-        botoes.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const materiaSelecionada = btn.getAttribute("data-materia");
-                iniciar(materiaSelecionada);
-            });
-        });
-
-        // 5. RECUPERAÇÃO DE ESTADO (RETORNO DO JOGADOR)
-        const nomeSalvo = localStorage.getItem("nomeJogador");
-        if (nomeSalvo) {
-            inputNome.value = nomeSalvo;
-        }
-
-        const fotoSalva = localStorage.getItem("fotoJogador");
-        if (fotoSalva) {
-            fotoJogador.src = fotoSalva;
-        }
-    </script>
+// Voz de boas-vindas
+setTimeout(() => {
+    const nome = localStorage.getItem('nomeJogador') || '';
+    if (typeof falar === 'function' && nome && nome !== 'Jogador')
+        falar(`Olá ${nome}! Que bom ter você aqui!`, 'festa');
+}, 2200);
+</script>
 </body>
 </html>

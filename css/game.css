@@ -1,289 +1,351 @@
 /**
- * MUNDO DOS AMIGOS - NÚCLEO VISUAL DO JOGO (V21.3.0)
- * 🔒 STATUS: ENGENHARIA SÊNIOR ATIVADA - CUPERTINO PREMIUM LOOK
- * ✅ FIX 1: Remoção de Borda Preta na Pergunta (Soft Shadow + Blur)
- * ✅ FIX 2: Microinterações de Toque nos Botões (Press State)
- * ✅ FIX 3: Peso Visual e Profundidade no Header
- * ✅ FIX 4: Transições Suaves entre Estados de Jogo (Anti-seco)
+ * MUNDO DOS AMIGOS — JOGO CSS (V23.0.0 ULTRA)
+ * 🎨 Visual premium iOS-like para todas as telas do jogo
+ * ✅ GPU Accelerated, 100dvh, safe area
+ * ✅ Botões com gradientes únicos e shimmer
+ * ✅ Feedback de erro/acerto com cores saturadas
+ * ✅ Objetos de apoio com animações especiais
  */
 
- :root {
-    --primary: #4F46E5;
-    --primary-light: #6366F1;
-    --secondary: #22C55E;
-    --danger: #EF4444;
-    --card: rgba(255, 255, 255, 0.55);
-    --radius: 20px;
-    --radius-lg: 24px;
-    
-    /* Shadow System Apple */
-    --shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.06);
-    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.15);
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+:root {
+    --primary:       #4F46E5;
+    --primary-light: #818CF8;
+    --secondary:     #10B981;
+    --danger:        #EF4444;
+    --accent:        #F59E0B;
+    --purple:        #8B5CF6;
+    --pink:          #EC4899;
+    --cyan:          #06B6D4;
+
+    --card:          rgba(255,255,255,0.6);
+    --card-border:   rgba(255,255,255,0.65);
+    --radius:        20px;
+    --radius-lg:     26px;
+    --radius-xl:     32px;
+    --shadow-sm:     0 4px 14px rgba(0,0,0,0.06);
+    --shadow-md:     0 10px 30px rgba(0,0,0,0.10);
+    --shadow-lg:     0 20px 50px rgba(0,0,0,0.14);
 }
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    box-sizing: border-box; margin: 0; padding: 0;
+    font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
-    /* 🔥 CORREÇÃO CRÍTICA 4: TRANSIÇÃO SUAVE (ANTI-SECO) */
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    overflow-x: hidden;
-    color: #1E293B;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- ANIMAÇÕES CORE --- */
-@keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* ─── BODY ─────────────────────────────────────────────────── */
+body {
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; height: 100dvh;
+    overflow: hidden;
+    background: linear-gradient(145deg, #F0F4FF 0%, #EEF2FF 40%, #E0F2FE 100%);
+    padding: 8px env(safe-area-inset-right,8px) env(safe-area-inset-bottom,8px) env(safe-area-inset-left,8px);
+    /* Bolha decorativa */
+    position: relative;
 }
 
-@keyframes shakeScreen {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    50% { transform: translateX(4px); }
-    75% { transform: translateX(-4px); }
-    100% { transform: translateX(0); }
+body::before {
+    content: '';
+    position: fixed; width: 350px; height: 350px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(129,140,248,0.18), transparent);
+    top: -100px; right: -100px; pointer-events: none; z-index: 0;
+    filter: blur(40px);
 }
 
-@keyframes tapBounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.92); }
-    100% { transform: scale(1); }
+body.fade-out { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+
+/* Transição controlada */
+.btn-sair, #progressBarFull, .choice-container {
+    transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.container {
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    animation: fadeSlideUp 0.4s cubic-bezier(.4, 2, .6, 1);
-}
-
-.shake { animation: shakeScreen 0.3s; }
-
-/* --- 🔥 CORREÇÃO CRÍTICA 3: HEADER PREMIUM (PESO VISUAL) --- */
+/* ─── HEADER ─────────────────────────────────────────────────── */
 .header-game {
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    /* Profundidade real estilo iPhone */
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 0 0 20px 20px;
-    /* Sombra mais forte para separar do conteúdo */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    /* Borda sutil de acabamento */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    width: 100%; max-width: 430px; position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 8px; flex-shrink: 0;
 }
 
 .btn-sair {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #EF4444, #F87171);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: var(--shadow-soft);
-    font-size: 1.4rem;
-    transition: transform 0.1s;
+    background: var(--card);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid var(--card-border);
+    padding: 9px 18px; border-radius: var(--radius);
+    color: var(--primary); font-weight: 900; font-size: 1.3rem;
+    cursor: pointer; box-shadow: var(--shadow-sm);
 }
+.btn-sair:active { transform: scale(0.93); background: rgba(255,255,255,0.85); }
 
-.btn-sair:active {
-    transform: scale(0.95);
+.header-right {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
 }
 
 .foto-perfil-hud {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    object-fit: cover;
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 3px solid white; box-shadow: var(--shadow-md);
+    object-fit: cover; flex-shrink: 0;
 }
 
-/* --- HUD E CARDS PREMIUM (GLASS) --- */
-#hud, #area-ajuda-visual, .choice-container {
+#conquistas-count {
+    font-size: 1.05rem; font-weight: 900; color: var(--accent);
+    text-shadow: 0 1px 4px rgba(245,158,11,0.3);
+}
+
+/* ─── BTN MUDO ──────────────────────────────────────────────── */
+#btn-mudo {
     background: var(--card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-soft);
-    /* Borda sutil de vidro para acabamento */
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid var(--card-border);
+    border-radius: 50%; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
 }
+#btn-mudo:active { transform: scale(0.88); }
 
-#hud {
-    width: 100%;
-    display: flex;
+/* ─── CONTAINER PRINCIPAL ────────────────────────────────────── */
+.container {
+    width: 100%; max-width: 430px; position: relative; z-index: 1;
+    display: flex; flex-direction: column;
     justify-content: space-between;
-    padding: 20px;
-    margin-bottom: 25px;
+    flex: 1; min-height: 0;
+    padding: 6px 14px 12px;
+    gap: 8px;
 }
 
-.hud-item p {
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: var(--text-light);
+/* ─── HUD ───────────────────────────────────────────────────── */
+#hud {
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--card);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    padding: 13px 16px; border-radius: var(--radius-lg);
+    border: 1.5px solid var(--card-border);
+    box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
 
-/* --- BARRA DE PROGRESSO --- */
+.hud-item {
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+#progressText {
+    font-size: 1.35rem; font-weight: 900; color: var(--primary);
+}
+
 #progressBar {
-    width: 14rem;
-    height: 1.6rem;
-    border-radius: 10px;
-    overflow: hidden;
-    background: white;
-    margin-top: 5px;
+    width: 100%; height: 9px;
+    background: rgba(0,0,0,0.07);
+    border-radius: 10px; overflow: hidden;
     border: 1px solid rgba(0,0,0,0.05);
 }
 
 #progressBarFull {
     height: 100%;
-    background: linear-gradient(90deg, #4F46E5, #22C55E);
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--purple));
+    background-size: 200%;
+    animation: barraShimmer 2s linear infinite;
     border-radius: 10px;
-    width: 0%;
-    /* Transição elástica premium */
-    transition: width 0.6s cubic-bezier(.4, 2, .6, 1);
+    transition: width 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes barraShimmer {
+    0%  { background-position: 0% }
+    100%{ background-position: 200% }
 }
 
-/* --- 🔥 CORREÇÃO CRÍTICA 1: PERGUNTA SEM BORDA PRETA --- */
+.hud-item p { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+
+#combo-display {
+    display: none;
+    font-size: 1.15rem; font-weight: 900;
+    text-align: center;
+    background: linear-gradient(135deg, #FF6B6B, #FE7F2D);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboPulse 0.4s ease-out;
+}
+#combo-display.ativo { display: block; }
+@keyframes comboPulse {
+    0%  { transform: scale(0.8) } 60% { transform: scale(1.15) } 100%{ transform: scale(1) }
+}
+
+/* ─── PERGUNTA ───────────────────────────────────────────────── */
 #question {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: var(--primary);
-    text-align: center;
-    margin: 30px 0;
-    min-height: 80px;
-    
-    /* Removemos a borda web */
-    border: none;
-    
-    /* Adicionamos Soft Shadow + Blur (Apple Style) */
-    background: rgba(255, 255, 255, 0.5);
-    padding: 12px 18px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    backdrop-filter: blur(5px);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 900; text-align: center;
+    background: linear-gradient(135deg, var(--primary), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 2px 0;
+    animation: fadeInUp 0.4s ease forwards;
+    flex-shrink: 0; line-height: 1.3;
+}
+@keyframes fadeInUp {
+    from { opacity:0; transform:translateY(12px) }
+    to   { opacity:1; transform:translateY(0) }
 }
 
-/* --- GRID DE RESPOSTAS --- */
-#choices-area {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-}
-
-/* 🔥 CORREÇÃO CRÍTICA 2: MICRO INTERAÇÃO DE TOQUE (PRESS STATE) */
-.choice-container {
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 90px;
-    
-    will-change: transform, box-shadow;
-    
-    /* Profundidade inicial sutil */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-}
-
-/* Estado de Hover (Desktop) */
-.choice-container:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-strong);
-    background: rgba(255, 255, 255, 0.9);
-}
-
-/* 🔥 Estado Ativo (Pressionado/Toque no iOS) */
-.choice-container:active {
-    /* Efeito de "afundar" levemente */
-    transform: translateY(1px) scale(0.97);
-    /* Sombra diminui para simular proximidade com o fundo */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    /* Feedback visual de cor sutil */
-    background: rgba(255, 255, 255, 0.4);
-    transition: all 0.1s ease;
-}
-
-.choice-text {
-    font-size: 2.6rem;
-    font-weight: 800;
-    color: var(--primary);
-}
-
-/* --- FEEDBACK VISUAL (ACERTO/ERRO) --- */
-.correto {
-    background: linear-gradient(135deg, #22C55E, #4ADE80) !important;
-    border: none !important;
-}
-.correto .choice-text { color: white !important; }
-
-.errado {
-    background: linear-gradient(135deg, #FCA5A5, #F87171) !important;
-    border: none !important;
-}
-.errado .choice-text { color: white !important; }
-
-/* --- EFEITOS ESPECIAIS (CONFESSO E AJUDA) --- */
-.confete {
-    position: fixed;
-    width: 10px; height: 10px;
-    top: -10px;
-    animation: cair 1s linear forwards;
-    z-index: 9999;
-    opacity: 0.8; 
-}
-
-@keyframes cair { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-
+/* ─── ÁREA DE AJUDA VISUAL ───────────────────────────────────── */
 #area-ajuda-visual {
     width: 100%;
-    min-height: 120px;
-    margin: 20px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    min-height: 60px; max-height: 90px;
+    overflow: hidden;
+    display: flex; flex-wrap: wrap;
+    justify-content: center; align-items: center; gap: 4px;
+    padding: 4px 6px;
+    flex-grow: 1;
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
 }
 
 .emoji-ajuda {
-    font-size: 2.8rem;
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
     display: inline-block;
-    animation: floatEmoji 2s ease-in-out infinite;
+    animation: floatEmoji 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08));
+    transition: transform 0.2s ease;
 }
-
+.emoji-ajuda.emoji-destaque {
+    animation: destaquePulse 0.8s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 8px rgba(245,158,11,0.6));
+}
 @keyframes floatEmoji {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    0%,100%{ transform:translateY(0) rotate(0deg) }
+    50%    { transform:translateY(-7px) rotate(5deg) }
+}
+@keyframes destaquePulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.18); }
 }
 
-/* --- RESPONSIVIDADE --- */
-@media (max-width: 500px) {
-    #question { font-size: 2.4rem; }
-    #choices-area { grid-template-columns: 1fr; }
-    .choice-container { padding: 15px; min-height: 80px; }
+.ajuda-label-conta {
+    width: 100%;
+    text-align: center;
+    font-size: 1.05rem; font-weight: 900;
+    color: #92400E;
+    background: rgba(245,158,11,0.15);
+    border-radius: 8px; padding: 4px 8px;
+    margin-top: 4px;
+}
+
+/* ─── GRID DE RESPOSTAS ──────────────────────────────────────── */
+.choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px; width: 100%;
+    flex-shrink: 0;
+}
+
+/* Gradientes únicos por posição */
+.choice-container:nth-child(1) { --grad: linear-gradient(135deg, #4F46E5, #818CF8); --shadow-c: rgba(79,70,229,0.3); }
+.choice-container:nth-child(2) { --grad: linear-gradient(135deg, #10B981, #34D399); --shadow-c: rgba(16,185,129,0.3); }
+.choice-container:nth-child(3) { --grad: linear-gradient(135deg, #F59E0B, #FBBF24); --shadow-c: rgba(245,158,11,0.3); }
+.choice-container:nth-child(4) { --grad: linear-gradient(135deg, #EC4899, #F472B6); --shadow-c: rgba(236,72,153,0.3); }
+
+.choice-container {
+    background: var(--card);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: var(--radius-lg);
+    padding: 18px 10px;
+    min-height: clamp(72px, 12vh, 108px);
+    min-width: 44px;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    position: relative; overflow: hidden;
+    will-change: transform;
+}
+
+/* Shimmer passivo */
+.choice-container::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.choice-container:active { transform: scale(0.92); }
+
+.choice-text {
+    font-size: clamp(1.9rem, 5.5vw, 2.4rem);
+    font-weight: 900; color: var(--primary);
+    pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* ─── FEEDBACK DE RESPOSTA ───────────────────────────────────── */
+.choice-container.correta {
+    background: linear-gradient(135deg, #10B981, #059669) !important;
+    border-color: rgba(255,255,255,0.5) !important;
+    transform: scale(1.06);
+    box-shadow: 0 12px 30px rgba(16,185,129,0.5) !important;
+}
+.choice-container.correta .choice-text { color: white !important; text-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; }
+
+.choice-container.errada {
+    background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+    border-color: rgba(255,255,255,0.4) !important;
+    transform: scale(0.94);
+    box-shadow: 0 8px 24px rgba(239,68,68,0.5) !important;
+}
+.choice-container.errada .choice-text { color: white !important; }
+
+/* ─── CONFETE ────────────────────────────────────────────────── */
+.confete {
+    position: fixed; top: -12px;
+    border-radius: 2px; pointer-events: none;
+    animation: cair 1.4s ease-out forwards;
+    z-index: 9999;
+}
+@keyframes cair {
+    to { transform: translateY(105dvh) rotate(720deg); opacity: 0; }
+}
+
+/* ─── ANIMAÇÕES DE IMPACTO ───────────────────────────────────── */
+.acerto-animado { animation: acertoPop 0.55s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes acertoPop {
+    0%  { transform: scale(1) }
+    50% { transform: scale(1.18) }
+    100%{ transform: scale(1.06) }
+}
+
+.erro-animado { animation: erroShake 0.4s ease-in-out; }
+@keyframes erroShake {
+    0%,100%{ transform:translateX(0) }
+    25%    { transform:translateX(-10px) }
+    50%    { transform:translateX(10px) }
+    75%    { transform:translateX(-5px) }
+}
+
+.shake { animation: screenShake 0.35s ease-in-out; }
+@keyframes screenShake {
+    0%,100%{ transform:translate(0,0) }
+    25%    { transform:translate(-5px,4px) }
+    50%    { transform:translate(5px,-4px) }
+    75%    { transform:translate(-3px,2px) }
+}
+
+/* ─── FOCO (ACESSIBILIDADE) ──────────────────────────────────── */
+.choice-container:focus-visible,
+.btn-sair:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(79,70,229,0.55);
+}
+
+/* ─── RESPONSIVO ─────────────────────────────────────────────── */
+@media (max-width: 380px) {
+    #question        { font-size: 1.7rem; }
+    .choice-text     { font-size: 1.7rem; }
+    .choice-container{ min-height: 62px; padding: 14px 8px; }
+    #hud             { padding: 10px 12px; }
+}
+
+@media (max-height: 680px) {
+    #area-ajuda-visual { min-height: 40px; max-height: 60px; }
+    .emoji-ajuda       { font-size: 1.6rem; }
+    .choice-container  { min-height: 58px; padding: 12px 8px; }
 }
