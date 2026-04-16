@@ -2,127 +2,140 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo dos Amigos - Fim de Jogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Mundo dos Amigos — Parabéns!</title>
     <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/game.css">
     <style>
-        /* ✅ PADRONIZAÇÃO APP FEELING: Transição suave de entrada */
-        body {
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100dvh;
-            background: linear-gradient(135deg, #F8FAFC, #EEF2FF, #E0F2FE);
+        body { opacity:0; transition:opacity .35s ease; justify-content:center; }
+        body.loaded { opacity:1; }
+        .end-card {
+            background:rgba(255,255,255,0.65);
+            backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+            border:1.5px solid rgba(255,255,255,0.7);
+            border-radius:28px; padding:32px 28px;
+            display:flex; flex-direction:column; align-items:center;
+            gap:16px; width:100%; max-width:400px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.12);
+            animation:slideUp .5s cubic-bezier(.4,2,.6,1);
+            text-align:center;
         }
-
-        body.loaded {
-            opacity: 1;
+        .end-titulo {
+            font-size:2.6rem; font-weight:900;
+            background:linear-gradient(135deg,#4F46E5,#8B5CF6,#EC4899);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
-
-        .avatar-final-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            margin: 20px 0;
+        .end-score {
+            font-size:3.5rem; font-weight:900; color:#4F46E5;
+            background:linear-gradient(135deg,#F59E0B,#EF4444);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
-
-        #foto-final {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 5px solid white;
-            box-shadow: var(--shadow-strong);
-            object-fit: cover;
+        .end-info { font-size:1.3rem; font-weight:700; color:#64748B; }
+        .end-conquistas {
+            font-size:1.25rem; font-weight:800; color:#92400E;
+            background:rgba(255,215,0,0.15); border:1.5px solid rgba(255,215,0,0.35);
+            border-radius:16px; padding:10px 20px;
         }
-
-        .menu-final {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-            max-width: 300px;
+        .btn-jogar-novamente {
+            width:100%; padding:18px;
+            background:linear-gradient(135deg,#4F46E5,#7C3AED);
+            color:white; border:none; border-radius:20px;
+            font-size:1.7rem; font-weight:900;
+            cursor:pointer; box-shadow:0 10px 28px rgba(79,70,229,.4);
+            transition:all .2s ease; position:relative; overflow:hidden;
         }
-
-        #finalScore {
-            font-size: 8rem;
-            font-weight: 900;
-            color: var(--primary);
-            margin: 0;
-            line-height: 1;
+        .btn-jogar-novamente::before {
+            content:'';position:absolute;inset:0;border-radius:inherit;
+            background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);
         }
+        .btn-jogar-novamente:active { transform:scale(0.96); }
+        .btn-home {
+            width:100%; padding:15px;
+            background:rgba(255,255,255,0.7);
+            color:#4F46E5; border:1.5px solid rgba(255,255,255,.6);
+            border-radius:18px; font-size:1.5rem; font-weight:900;
+            cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.07);
+            transition:all .2s ease;
+        }
+        .btn-home:active { transform:scale(0.96); }
+        .estrelas-row { font-size:2rem; letter-spacing:4px; }
     </style>
 </head>
 <body>
-    <div class="home-container">
-        <main id="end" class="flex-center flex-column" style="text-align: center; width: 100%;">
-            <p style="font-size: 1.8rem; font-weight: 700; color: var(--text-light);">SEU PLACAR</p>
-            <h1 id="finalScore">0</h1>
-            <p style="font-size: 2rem; font-weight: 600; margin-bottom: 20px;">🎉 Parabéns! Você completou!</p>
-            
-            <div class="avatar-final-container">
-                <img id="foto-final" src="img/avatar-padrao.png" alt="Avatar do Jogador">
-                <h2 id="nome-final" style="font-size: 2.4rem; color: var(--primary);">Jogador</h2>
-            </div>
 
-            <div class="menu-final">
-                <button class="btn-modo" id="btnReiniciar">JOGAR NOVAMENTE</button>
-                <button class="btn-modo btn-secundario" id="btnHome">MENU INICIAL</button>
-            </div>
-        </main>
+<main class="home-container">
+    <div class="end-card">
+        <div style="font-size:5rem;">🎓</div>
+        <div class="end-titulo" id="end-titulo">Incrível!</div>
+        <div class="estrelas-row" id="end-estrelas">⭐⭐⭐</div>
+        <div class="end-score" id="end-score">0 pts</div>
+        <div class="end-info" id="end-info">Você completou as 30 fases!</div>
+        <div class="end-conquistas" id="end-conquistas">🏆 0 Conquistas desbloqueadas</div>
+        <button class="btn-jogar-novamente" id="btn-novo">🎮 Jogar Novamente</button>
+        <button class="btn-home" id="btn-home">🏠 Início</button>
     </div>
+</main>
 
-    <script src="js/sons.js"></script>
-    <script src="js/voz.js"></script>
-    
-    <script>
-        /**
-         * LÓGICA DE ENCERRAMENTO (V22.0.0)
-         * 🔒 STATUS: ENGENHARIA SÊNIOR - COMPATIBILIDADE TOTAL
-         */
-        document.addEventListener("DOMContentLoaded", () => {
-            const finalScoreElement = document.getElementById("finalScore");
-            const nomeFinalElement = document.getElementById("nome-final");
-            const fotoFinalElement = document.getElementById("foto-final");
-            const btnReiniciar = document.getElementById("btnReiniciar");
-            const btnHome = document.getElementById("btnHome");
+<script src="js/sons.js"></script>
+<script src="js/voz.js"></script>
+<script>
+window.addEventListener('load', function() {
+    var score    = parseInt(localStorage.getItem('mostRecentScore') || '0');
+    var estrelas = parseInt(localStorage.getItem('estrelas') || '0');
+    var nome     = localStorage.getItem('nomeJogador') || 'Campeão';
+    var nConq    = JSON.parse(localStorage.getItem('conquistas')||'[]').length;
 
-            // 1. RECUPERAR DADOS DO LOCALSTORAGE (Sincronizado com game.js)
-            const mostRecentScore = localStorage.getItem("mostRecentScore") || 0;
-            const nomeUsuario = localStorage.getItem("nomeJogador") || "Amigo";
-            const fotoSalva = localStorage.getItem("fotoJogador") || "img/avatar-padrao.png";
-            const modo = localStorage.getItem("modoJogo") || "Soma";
+    document.getElementById('end-titulo').textContent  = 'Parabéns, '+nome+'!';
+    document.getElementById('end-score').textContent   = score + ' pontos!';
+    document.getElementById('end-info').textContent    = 'Você completou as 30 fases! 🎉';
+    document.getElementById('end-conquistas').textContent = '🏆 '+nConq+' Conquista'+(nConq!==1?'s':'')+' desbloqueada'+(nConq!==1?'s':'')+'!';
 
-            // 2. ATUALIZAR INTERFACE
-            finalScoreElement.innerText = mostRecentScore;
-            nomeFinalElement.innerText = nomeUsuario;
-            fotoFinalElement.src = fotoSalva;
+    // Estrelas
+    var stStr = '';
+    for(var i=0;i<Math.min(estrelas,10);i++) stStr+='⭐';
+    document.getElementById('end-estrelas').textContent = stStr || '⭐';
 
-            // 3. FEEDBACK DE VOZ (Estilo Apple)
-            if (typeof falar === "function") {
-                // Pequeno delay para a voz não cortar o efeito visual
-                setTimeout(() => {
-                    falar(`Parabéns ${nomeUsuario}! Você completou o desafio de ${modo} e fez ${mostRecentScore} pontos!`);
-                }, 500);
-            }
+    // Confetes e sons
+    soltarConfetes();
+    setTimeout(function() {
+        if (typeof tocarSomFinal==='function') tocarSomFinal();
+        setTimeout(function(){
+            if(typeof falar==='function')
+                falar('Parabéns '+nome+'! Você é incrível! Você marcou '+score+' pontos e desbloqueou '+nConq+' conquistas!','festa');
+        }, 500);
+    }, 300);
 
-            // 4. NAVEGAÇÃO E SONS
-            btnReiniciar.onclick = () => {
-                if (typeof tocarSom === "function") tocarSom('clique');
-                window.location.href = "game.html";
-            };
+    document.body.classList.add('loaded');
+});
 
-            btnHome.onclick = () => {
-                if (typeof tocarSom === "function") tocarSom('clique');
-                window.location.href = "index.html";
-            };
+function soltarConfetes() {
+    var cores=['#22C55E','#4F46E5','#F59E0B','#EF4444','#EC4899','#06B6D4'];
+    for(var i=0;i<60;i++){
+        (function(ii){
+            setTimeout(function(){
+                var c=document.createElement('div');
+                c.style.cssText='position:fixed;top:-12px;left:'+Math.random()*100+'vw;width:'+(4+Math.random()*8)+'px;height:'+(4+Math.random()*8)+'px;background:'+cores[~~(Math.random()*cores.length)]+';border-radius:'+(Math.random()>.5?'50%':'2px')+';pointer-events:none;z-index:9999;animation:confeteCair '+(0.9+Math.random())*1.1+'s ease-out forwards;';
+                document.body.appendChild(c);
+                setTimeout(function(){if(c.parentNode)c.remove();},2500);
+            },ii*60);
+        })(i);
+    }
+}
 
-            // 🔥 5. ATIVAÇÃO DA TRANSIÇÃO SUAVE (FADE-IN)
-            document.body.classList.add("loaded");
-        });
-    </script>
+document.getElementById('btn-novo').onclick = function() {
+    if(typeof tocarSomClique==='function') tocarSomClique();
+    window.location.href='game.html';
+};
+document.getElementById('btn-home').onclick = function() {
+    if(typeof tocarSomClique==='function') tocarSomClique();
+    window.location.href='index.html';
+};
+
+// CSS do confete
+var s=document.createElement('style');
+s.textContent='@keyframes confeteCair{to{transform:translateY(105dvh) rotate(720deg);opacity:0}}';
+document.head.appendChild(s);
+</script>
 </body>
 </html>

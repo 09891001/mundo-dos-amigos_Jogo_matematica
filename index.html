@@ -11,29 +11,32 @@
 </head>
 <body>
 
-<button id="btn-mudo" aria-label="Ligar/desligar som">🔊</button>
+<button id="btn-mudo" aria-label="Liga/desliga som">🔊</button>
 
 <main class="home-container">
 
+    <!-- Avatar -->
     <div id="perfil-container" role="button" tabindex="0" aria-label="Alterar foto de perfil">
         <img id="foto-jogador" src="img/avatar-padrao.png" alt="Foto de perfil">
         <p>👆 Toque para mudar a foto</p>
         <input type="file" id="inputFoto" accept="image/*" style="display:none">
     </div>
 
+    <!-- Título -->
     <h1 class="titulo-home">Mundo dos Amigos! 🌍</h1>
 
-    <button class="badge-conquistas" id="badge-conquistas" onclick="abrirModalConquistas()">
-        🏆 <span id="texto-conquistas">0 Conquistas</span>
+    <!-- Badge de conquistas -->
+    <button class="badge-conquistas" id="badge-conquistas">
+        🏆 <span id="txt-conq">0 Conquistas</span>
     </button>
 
-    <input
-        type="text" id="nomeJogador"
+    <!-- Nome -->
+    <input type="text" id="nomeJogador"
         placeholder="✏️ Qual é o seu nome?"
         maxlength="15" autocomplete="off"
-        aria-label="Digite seu nome"
-    >
+        aria-label="Digite seu nome">
 
+    <!-- Operações -->
     <nav class="menu-materias" role="navigation" aria-label="Escolha a operação">
         <button class="btn-destaque" data-materia="soma">➕ SOMA</button>
         <button class="btn-destaque" data-materia="subtracao">➖ SUBTRAÇÃO</button>
@@ -44,52 +47,49 @@
 
 </main>
 
-<div id="modal-conquistas" style="display:none"></div>
+<!-- Modal conquistas (montado por JS) -->
+<div id="modal-cq" style="display:none"></div>
 
 <script src="js/sons.js"></script>
 <script src="js/voz.js"></script>
 <script>
-const inputNome   = document.getElementById('nomeJogador');
-const botoes      = document.querySelectorAll('.btn-destaque');
-const perfilBtn   = document.getElementById('perfil-container');
-const inputFoto   = document.getElementById('inputFoto');
-const fotoJogador = document.getElementById('foto-jogador');
-const textoConq   = document.getElementById('texto-conquistas');
-const btnMudo     = document.getElementById('btn-mudo');
+// ─── Elementos ────────────────────────────────────────
+var inp      = document.getElementById('nomeJogador');
+var botoes   = document.querySelectorAll('.btn-destaque');
+var perfilEl = document.getElementById('perfil-container');
+var inputFoto= document.getElementById('inputFoto');
+var fotoEl   = document.getElementById('foto-jogador');
+var txtConq  = document.getElementById('txt-conq');
+var btnMudo  = document.getElementById('btn-mudo');
+var badgeBtn = document.getElementById('badge-conquistas');
 
-// Avatar
-perfilBtn.onclick = () => inputFoto.click();
-inputFoto.onchange = (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = ev => {
-        fotoJogador.src = ev.target.result;
+// ─── Avatar ───────────────────────────────────────────
+perfilEl.onclick = function(){ inputFoto.click(); };
+inputFoto.onchange = function(e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(ev) {
+        fotoEl.src = ev.target.result;
         localStorage.setItem('fotoJogador', ev.target.result);
-        if (typeof tocarSomClique === 'function') tocarSomClique();
+        if (typeof tocarSomClique==='function') tocarSomClique();
     };
     r.readAsDataURL(f);
 };
 
-// Mudo
+// ─── Mudo ─────────────────────────────────────────────
 function sincMudo() {
-    const m = localStorage.getItem('mutado') === 'true';
+    var m = localStorage.getItem('mutado')==='true';
     btnMudo.textContent = m ? '🔇' : '🔊';
 }
-btnMudo.onclick = () => {
-    if (typeof toggleMudo === 'function') toggleMudo();
+btnMudo.onclick = function() {
+    if (typeof toggleMudo==='function') toggleMudo();
     sincMudo();
-    if (typeof tocarSomClique === 'function') tocarSomClique();
+    if (typeof tocarSomClique==='function') tocarSomClique();
 };
 sincMudo();
 
-// Badge conquistas
-function atualizarBadge() {
-    const t = JSON.parse(localStorage.getItem('conquistas') || '[]').length;
-    textoConq.textContent = t === 0 ? '0 Conquistas' : `${t} Conquista${t>1?'s':''}!`;
-}
-
-// Modal conquistas
-const DEF = [
+// ─── Conquistas ───────────────────────────────────────
+var DEF_CQ = [
     {id:'primeiro_acerto',icone:'⭐',titulo:'Primeira Estrela',  desc:'Acertou pela primeira vez!'},
     {id:'combo_3',        icone:'🔥',titulo:'Em Chamas!',        desc:'3 acertos seguidos!'},
     {id:'combo_5',        icone:'💥',titulo:'Combo x5',          desc:'5 acertos seguidos!'},
@@ -106,84 +106,77 @@ const DEF = [
     {id:'completo',       icone:'🎓',titulo:'Formado!',          desc:'Completou as 30 fases!'},
 ];
 
-function abrirModalConquistas() {
-    if (typeof tocarSomClique === 'function') tocarSomClique();
-    const modal  = document.getElementById('modal-conquistas');
-    const desbloq = new Set(JSON.parse(localStorage.getItem('conquistas') || '[]'));
-    modal.innerHTML = `
-    <div onclick="if(event.target===this)fecharModal()" style="
-        position:fixed;inset:0;background:rgba(0,0,0,0.65);
-        z-index:99999;display:flex;align-items:center;justify-content:center;
-        padding:16px;backdrop-filter:blur(8px);animation:fIn .2s ease;">
-      <div style="background:linear-gradient(145deg,#0d1b2a,#1a2744);border-radius:28px;padding:22px;
-          width:100%;max-width:380px;max-height:82dvh;overflow-y:auto;
-          border:1.5px solid rgba(255,215,0,.3);box-shadow:0 30px 80px rgba(0,0,0,.6);animation:sUp .35s cubic-bezier(.175,.885,.32,1.275);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div>
-            <div style="color:#FFD700;font-weight:900;font-size:1.5rem;">🏆 Conquistas</div>
-            <div style="color:rgba(255,255,255,.5);font-size:.82rem;margin-top:2px;">${desbloq.size}/${DEF.length} desbloqueadas</div>
-          </div>
-          <button onclick="fecharModal()" style="background:rgba(255,255,255,.1);border:none;color:white;font-size:1.3rem;cursor:pointer;border-radius:50%;width:34px;height:34px;">✕</button>
-        </div>
-        ${DEF.map(c => {
-            const ok = desbloq.has(c.id);
-            return `<div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;margin-bottom:7px;
-                background:${ok?'rgba(255,215,0,.08)':'rgba(255,255,255,.03)'};
-                border:1.5px solid ${ok?'rgba(255,215,0,.22)':'transparent'};">
-              <span style="font-size:1.85rem;flex-shrink:0;filter:${ok?'none':'grayscale(1) opacity(.22)'};">${c.icone}</span>
-              <div style="flex:1;">
-                <div style="color:${ok?'#f8fafc':'#555'};font-weight:800;font-size:.93rem;">${c.titulo}</div>
-                <div style="color:${ok?'rgba(255,255,255,.55)':'#3a3a3a'};font-size:.76rem;margin-top:1px;">${c.desc}</div>
-              </div>
-              ${ok?'<span style="color:#22C55E;font-size:1rem;">✓</span>':'<span style="color:#2a2a2a;">🔒</span>'}
-            </div>`;
-        }).join('')}
-      </div>
-    </div>
-    <style>@keyframes fIn{from{opacity:0}to{opacity:1}}@keyframes sUp{from{transform:translateY(28px) scale(.95);opacity:0}to{transform:none;opacity:1}}</style>`;
-    modal.style.display = 'block';
+function atualizarBadge() {
+    var t = JSON.parse(localStorage.getItem('conquistas')||'[]').length;
+    txtConq.textContent = t===0 ? '0 Conquistas' : t+' Conquista'+(t>1?'s':'')+'!';
 }
 
-function fecharModal() {
-    const m = document.getElementById('modal-conquistas');
-    m.style.display = 'none'; m.innerHTML = '';
+badgeBtn.onclick = function() {
+    if (typeof tocarSomClique==='function') tocarSomClique();
+    var modal = document.getElementById('modal-cq');
+    var desbl = new Set(JSON.parse(localStorage.getItem('conquistas')||'[]'));
+    modal.innerHTML =
+        '<div onclick="if(event.target===this)fecharCQ()" style="position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px);">'+
+        '<div style="background:linear-gradient(145deg,#0d1b2a,#1a2744);border-radius:26px;padding:20px;width:100%;max-width:380px;max-height:84dvh;overflow-y:auto;border:1.5px solid rgba(255,215,0,.3);box-shadow:0 30px 80px rgba(0,0,0,.6);">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'+
+        '<div><div style="color:#FFD700;font-weight:900;font-size:1.45rem;">🏆 Conquistas</div>'+
+        '<div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:2px;">'+desbl.size+'/'+DEF_CQ.length+' desbloqueadas</div></div>'+
+        '<button onclick="fecharCQ()" style="background:rgba(255,255,255,.1);border:none;color:white;font-size:1.3rem;cursor:pointer;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">✕</button></div>'+
+        DEF_CQ.map(function(c){
+            var ok=desbl.has(c.id);
+            return '<div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;margin-bottom:7px;background:'+(ok?'rgba(255,215,0,.08)':'rgba(255,255,255,.03)')+';border:1.5px solid '+(ok?'rgba(255,215,0,.22)':'transparent')+';">'+
+            '<span style="font-size:1.85rem;flex-shrink:0;filter:'+(ok?'none':'grayscale(1) opacity(.22)')+';">'+c.icone+'</span>'+
+            '<div style="flex:1;"><div style="color:'+(ok?'#f8fafc':'#555')+';font-weight:800;font-size:.92rem;">'+c.titulo+'</div>'+
+            '<div style="color:'+(ok?'rgba(255,255,255,.55)':'#3a3a3a')+';font-size:.75rem;margin-top:1px;">'+c.desc+'</div></div>'+
+            (ok?'<span style="color:#22C55E;font-size:1rem;">✓</span>':'<span style="color:#2a2a2a;font-size:.9rem;">🔒</span>')+'</div>';
+        }).join('')+
+        '</div></div>'+
+        '<style>@keyframes mcIn{from{opacity:0}to{opacity:1}}</style>';
+    modal.style.display='block';
+};
+
+function fecharCQ() {
+    var m=document.getElementById('modal-cq');
+    m.style.display='none'; m.innerHTML='';
 }
 
-// Iniciar jogo
+// ─── Iniciar ──────────────────────────────────────────
 function iniciar(materia) {
-    const raw  = inputNome.value.trim();
-    const nome = !raw ? 'Jogador' : raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-    if (typeof tocarSomClique === 'function') tocarSomClique();
+    var raw  = inp.value.trim();
+    var nome = !raw ? 'Jogador' : raw.charAt(0).toUpperCase()+raw.slice(1).toLowerCase();
+    if (typeof tocarSomClique==='function') tocarSomClique();
     localStorage.setItem('nomeJogador', nome);
     localStorage.setItem('modoJogo', materia);
-    if (!localStorage.getItem('fotoJogador')) localStorage.setItem('fotoJogador', 'img/avatar-padrao.png');
-    if (typeof falar === 'function') falar(`Olá ${nome}! Vamos jogar!`, 'festa');
-    botoes.forEach(b => b.disabled = true);
+    if (!localStorage.getItem('fotoJogador')) localStorage.setItem('fotoJogador','img/avatar-padrao.png');
+    if (typeof falar==='function') falar('Olá '+nome+'! Vamos jogar!','festa');
+    botoes.forEach(function(b){ b.disabled=true; });
     document.body.classList.add('fade-out');
-    setTimeout(() => window.location.href = 'game.html', 380);
+    setTimeout(function(){ window.location.href='game.html'; }, 370);
 }
 
-botoes.forEach(b => b.addEventListener('click', () => iniciar(b.dataset.materia)));
-inputNome.addEventListener('keypress', e => { if(e.key==='Enter') iniciar('soma'); });
+botoes.forEach(function(b){ b.addEventListener('click',function(){ iniciar(b.dataset.materia); }); });
+inp.addEventListener('keypress', function(e){ if(e.key==='Enter') iniciar('soma'); });
 
-window.addEventListener('load', () => {
-    const nome = localStorage.getItem('nomeJogador');
-    const foto = localStorage.getItem('fotoJogador');
-    if (nome && nome !== 'Jogador') inputNome.value = nome;
-    if (foto) fotoJogador.src = foto;
+// ─── Init ─────────────────────────────────────────────
+window.addEventListener('load', function() {
+    var nome=localStorage.getItem('nomeJogador'), foto=localStorage.getItem('fotoJogador');
+    if (nome&&nome!=='Jogador') inp.value=nome;
+    if (foto) fotoEl.src=foto;
     atualizarBadge();
     document.body.classList.add('loaded');
-    document.addEventListener('pointerdown', () => {
-        if (typeof gerenciarMusicaFundo === 'function') gerenciarMusicaFundo('home');
-    }, { once: true });
-});
 
-// Voz de boas-vindas
-setTimeout(() => {
-    const nome = localStorage.getItem('nomeJogador') || '';
-    if (typeof falar === 'function' && nome && nome !== 'Jogador')
-        falar(`Olá ${nome}! Que bom ter você aqui!`, 'festa');
-}, 2200);
+    // Música home após primeiro toque
+    document.addEventListener('pointerdown', function im(){
+        document.removeEventListener('pointerdown',im);
+        if (typeof gerenciarMusicaFundo==='function') gerenciarMusicaFundo('home');
+    });
+
+    // Voz de boas-vindas
+    setTimeout(function(){
+        var n=localStorage.getItem('nomeJogador')||'';
+        if (typeof falar==='function'&&n&&n!=='Jogador') falar('Olá '+n+'! Que bom ter você aqui!','festa');
+    }, 2000);
+});
 </script>
 </body>
 </html>

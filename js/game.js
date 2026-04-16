@@ -1,492 +1,551 @@
 /**
- * MUNDO DOS AMIGOS — MOTOR DO JOGO (V27.0.0 ULTRA GOLD)
- * ✅ Sistema TEA: apoio progressivo até 10 tentativas, nunca muda questão
- * ✅ Objetos visuais aparecem na 2ª tentativa errada
- * ✅ Frases motivadoras com nome do jogador
- * ✅ Conquistas em tempo real (combo, fases, pontos, velocidade)
- * ✅ Efeitos: confetes premium, partículas de clique, pontos flutuantes, estrelas
- * ✅ Nível-up popup a cada 5 fases
- * ✅ Som de fundo com crossfade entre fases
+ * MUNDO DOS AMIGOS — MOTOR DO JOGO (V28.0.0 DEFINITIVO FINAL)
+ *
+ * FIXES DESTA VERSÃO:
+ * ✅ Objetos visuais completamente visíveis em TODAS as telas
+ * ✅ Layout flexível: HUD compacto → pergunta → área objetos → botões
+ * ✅ Apoio TEA: questão nunca muda, objetos pedagógicos por operação
+ * ✅ Som de fundo que muda a cada bloco de 10 fases
+ * ✅ Som de parabéns completo ao acertar
+ * ✅ Som de erro com shake na tela
+ * ✅ Partículas, confetes, pontos flutuantes, estrelas voando
+ * ✅ Nível-up popup a cada 5 fases com música
+ * ✅ 14 conquistas verificadas em tempo real
  * ✅ Compatibilidade total iOS/Android
  */
 
 // ═══════════════════════════════════════════════════════════════
-// 1. EFEITOS VISUAIS PREMIUM
+// EFEITOS VISUAIS
 // ═══════════════════════════════════════════════════════════════
 
-function soltarConfete(intensidade = 1) {
+function soltarConfete(intensidade) {
+    intensidade = intensidade || 1;
     const cores = ['#22C55E','#4F46E5','#F59E0B','#EF4444','#EC4899','#06B6D4','#8B5CF6','#F97316'];
-    const total = Math.round((window.innerWidth < 500 ? 22 : 50) * intensidade);
+    const total = Math.round((window.innerWidth < 480 ? 20 : 45) * intensidade);
     for (let i = 0; i < total; i++) {
         const c = document.createElement('div');
         c.className = 'confete';
-        c.style.cssText = `
-            left:${Math.random()*100}vw;
-            background:${cores[~~(Math.random()*cores.length)]};
-            width:${4+Math.random()*8}px;height:${4+Math.random()*8}px;
-            border-radius:${Math.random()>.5?'50%':'2px'};
-            animation-duration:${0.7+Math.random()*1.2}s;
-            animation-delay:${Math.random()*0.4}s;
-        `;
+        c.style.left = (Math.random() * 100) + 'vw';
+        c.style.background = cores[~~(Math.random() * cores.length)];
+        c.style.width  = (4 + Math.random() * 8) + 'px';
+        c.style.height = (4 + Math.random() * 8) + 'px';
+        c.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+        c.style.animationDuration = (0.8 + Math.random() * 1.1) + 's';
+        c.style.animationDelay    = (Math.random() * 0.35) + 's';
         document.body.appendChild(c);
-        setTimeout(() => c.remove(), 1800);
+        setTimeout(() => { if (c.parentNode) c.remove(); }, 2000);
     }
 }
 
-function particulaClique(x, y, cor = '#4F46E5') {
+function particulaClique(x, y) {
+    const cs = ['#4F46E5','#22C55E','#F59E0B','#EF4444','#EC4899','#8B5CF6'];
     for (let i = 0; i < 6; i++) {
         const p = document.createElement('div');
-        const ang = (i/6)*360;
-        p.style.cssText = `
-            position:fixed;left:${x}px;top:${y}px;
-            width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:9999;
-            background:${['#4F46E5','#22C55E','#F59E0B','#EF4444','#EC4899','#8B5CF6'][i]};
-            transition:all 0.45s cubic-bezier(0.2,0.8,0.2,1);
-        `;
+        const ang = (i / 6) * 360;
+        p.style.cssText = 'position:fixed;left:'+x+'px;top:'+y+'px;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:9999;background:'+cs[i]+';transition:all .45s cubic-bezier(.2,.8,.2,1);';
         document.body.appendChild(p);
-        const d = 35 + Math.random()*30;
+        const d = 35 + Math.random() * 28;
         requestAnimationFrame(() => {
-            p.style.transform = `translate(${Math.cos(ang*Math.PI/180)*d}px,${Math.sin(ang*Math.PI/180)*d}px) scale(0)`;
+            p.style.transform = 'translate('+Math.cos(ang*Math.PI/180)*d+'px,'+Math.sin(ang*Math.PI/180)*d+'px) scale(0)';
             p.style.opacity = '0';
         });
-        setTimeout(() => p.remove(), 450);
+        setTimeout(() => { if(p.parentNode) p.remove(); }, 460);
     }
 }
 
-function pontosFlutuantes(x, y, val, cor = '#22C55E') {
+function pontosFlutuantes(x, y, val) {
     const el = document.createElement('div');
-    el.style.cssText = `
-        position:fixed;left:${x-15}px;top:${y-10}px;
-        font-size:1.6rem;font-weight:900;color:${cor};
-        pointer-events:none;z-index:9990;
-        text-shadow:0 2px 8px rgba(0,0,0,0.3);
-        animation:pontosFlutuar 1s ease-out forwards;
-    `;
-    el.textContent = val > 0 ? `+${val}` : `${val}`;
+    el.className = 'pts-float';
+    el.textContent = '+' + val;
+    el.style.left = (x - 18) + 'px';
+    el.style.top  = (y - 14) + 'px';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1000);
+    setTimeout(() => { if(el.parentNode) el.remove(); }, 900);
 }
 
 function estrelaFlutuante(x, y) {
     const el = document.createElement('div');
-    el.style.cssText = `
-        position:fixed;left:${x-16}px;top:${y-40}px;
-        font-size:1.8rem;pointer-events:none;z-index:9991;
-        animation:estrelaFluir 0.9s ease-out forwards;
-    `;
+    el.className = 'star-float';
     el.textContent = '⭐';
+    el.style.left = (x - 16) + 'px';
+    el.style.top  = (y - 42) + 'px';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 900);
+    setTimeout(() => { if(el.parentNode) el.remove(); }, 850);
 }
 
 function nivelUpPopup(fase) {
+    document.querySelectorAll('.nivel-popup').forEach(e => e.remove());
+    const msgs = {5:'Aquecendo! 🔥', 10:'Metade! 💪', 15:'Mais da metade! 🚀', 20:'Quase lá! 🏅', 25:'Faltam 5! 👑', 30:'VOCÊ PASSOU! 🎓'};
     const el = document.createElement('div');
-    el.className = 'nivel-up-popup';
-    const msgs = {5:'Aquecendo! 🔥',10:'Metade! 💪',15:'Mais da metade! 🚀',20:'Quase lá! 🏅',25:'Faltam 5! 👑',30:'COMPLETO! 🎓'};
-    el.innerHTML = `
-        <div class="nivel-up-icone">🚀</div>
-        <div class="nivel-up-info">
-            <span class="nivel-up-label">FASE ${fase}</span>
-            <span class="nivel-up-msg">${msgs[fase] || `Fase ${fase}!`}</span>
-        </div>
-    `;
+    el.className = 'nivel-popup';
+    el.innerHTML = '<div class="np-icon">🚀</div><div class="np-txt"><b>FASE '+fase+'</b><span>'+(msgs[fase]||'Avançando!')+'</span></div>';
     document.body.appendChild(el);
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('nivel-up-visivel')));
-    setTimeout(() => { el.classList.add('nivel-up-saindo'); setTimeout(() => el.remove(), 500); }, 1800);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('np-in')));
+    setTimeout(() => { el.classList.add('np-out'); setTimeout(() => { if(el.parentNode) el.remove(); }, 450); }, 2000);
 }
 
-// Injeta estilos de efeitos
+// Estilos dos efeitos
 (function() {
     const s = document.createElement('style');
     s.textContent = `
-    @keyframes pontosFlutuar {
-        0%   { opacity:1; transform:translateY(0) scale(1); }
-        100% { opacity:0; transform:translateY(-65px) scale(1.3); }
-    }
-    @keyframes estrelaFluir {
-        0%   { transform:scale(0) rotate(-20deg); opacity:1; }
-        60%  { transform:scale(1.5) rotate(10deg); opacity:1; }
-        100% { transform:scale(0) translateY(-30px); opacity:0; }
-    }
-    .nivel-up-popup {
-        position:fixed;top:50%;left:50%;
-        transform:translate(-50%,-50%) scale(0);
-        background:linear-gradient(135deg,#4F46E5,#7C3AED);
-        color:white;border-radius:28px;padding:20px 32px;
-        z-index:9990;display:flex;align-items:center;gap:14px;
-        box-shadow:0 20px 60px rgba(79,70,229,0.55);pointer-events:none;
-        transition:transform 0.45s cubic-bezier(0.175,0.885,0.32,1.5);
-    }
-    .nivel-up-visivel { transform:translate(-50%,-50%) scale(1) !important; }
-    .nivel-up-saindo  { transform:translate(-50%,-80%) scale(0) !important; opacity:0; transition:all 0.4s ease-in !important; }
-    .nivel-up-icone   { font-size:2.8rem; animation:spinOnce 0.5s ease-out; }
-    @keyframes spinOnce { from{transform:rotate(-180deg) scale(0)} to{transform:rotate(0) scale(1)} }
-    .nivel-up-info    { display:flex;flex-direction:column; }
-    .nivel-up-label   { font-size:1.8rem;font-weight:900;line-height:1; }
-    .nivel-up-msg     { font-size:1rem;opacity:0.85;margin-top:3px; }
+.pts-float{position:fixed;font-size:1.55rem;font-weight:900;color:#22C55E;pointer-events:none;z-index:9990;text-shadow:0 2px 8px rgba(0,0,0,.25);animation:pfloat .9s ease-out forwards;}
+@keyframes pfloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-58px) scale(1.25)}}
+.star-float{position:fixed;font-size:1.7rem;pointer-events:none;z-index:9991;animation:sfloat .85s ease-out forwards;}
+@keyframes sfloat{0%{transform:scale(0) rotate(-20deg);opacity:1}60%{transform:scale(1.4) rotate(8deg);opacity:1}100%{transform:scale(0) translateY(-28px);opacity:0}}
+.nivel-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+  background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;
+  border-radius:28px;padding:20px 30px;z-index:9995;
+  display:flex;align-items:center;gap:14px;pointer-events:none;
+  box-shadow:0 20px 60px rgba(79,70,229,.55);
+  transition:transform .45s cubic-bezier(.175,.885,.32,1.5);}
+.nivel-popup.np-in{transform:translate(-50%,-50%) scale(1);}
+.nivel-popup.np-out{transform:translate(-50%,-80%) scale(0);opacity:0;transition:all .4s ease-in;}
+.np-icon{font-size:2.6rem;animation:spin1 .5s ease-out;}
+@keyframes spin1{from{transform:rotate(-180deg) scale(0)}to{transform:rotate(0) scale(1)}}
+.np-txt{display:flex;flex-direction:column;gap:2px;}
+.np-txt b{font-size:1.75rem;font-weight:900;line-height:1;}
+.np-txt span{font-size:1rem;opacity:.85;margin-top:2px;}
     `;
     document.head.appendChild(s);
 })();
 
 
 // ═══════════════════════════════════════════════════════════════
-// 2. MOTOR DO JOGO
+// MOTOR DO JOGO
 // ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
 
-    // ─ Nodes ─────────────────────────────────────────────────
-    const N = {
-        pergunta:  document.getElementById('question')          || { innerText:'', classList:{add:()=>{},remove:()=>{}} },
-        score:     document.getElementById('score')             || { innerText:'' },
-        barra:     document.getElementById('progressBarFull')   || { style:{} },
-        fase:      document.getElementById('progressText')      || { innerText:'' },
-        estrelas:  document.getElementById('estrelas')          || { innerText:'', classList:{add:()=>{},remove:()=>{}}, offsetWidth:0 },
-        ajuda:     document.getElementById('area-ajuda-visual') || { innerHTML:'' },
-        respostas: Array.from(document.querySelectorAll('.choice-container')),
-        botoesModo:document.querySelectorAll('.btn-modo'),
-        fotoHud:   document.getElementById('foto-jogador'),
-        conquCount:document.getElementById('conquistas-count'),
-        comboDisplay: document.getElementById('combo-display'),
+    // ─ Mapeamento de nodes ────────────────────────────────────
+    var N = {
+        pergunta   : document.getElementById('question'),
+        score      : document.getElementById('score'),
+        barra      : document.getElementById('progressBarFull'),
+        faseTxt    : document.getElementById('progressText'),
+        estrelas   : document.getElementById('estrelas'),
+        ajuda      : document.getElementById('area-ajuda-visual'),
+        respostas  : Array.from(document.querySelectorAll('.choice-container')),
+        comboBox   : document.getElementById('combo-display'),
+        conquCount : document.getElementById('conquistas-count'),
     };
 
-    // ─ Estado ────────────────────────────────────────────────
-    const S = {
-        nome:           localStorage.getItem('nomeJogador') || 'Amigo',
-        operacao:       localStorage.getItem('modoJogo')    || 'soma',
-        fase:           1,
-        score:          0,
-        estrelas:       0,
-        n1:             0,
-        n2:             0,
-        respostaCorreta:0,
-        bloqueado:      false,
-        audioLiberado:  false,
-        vozPronta:      false,
-        emoji:          '🍎',
-        totalFases:     30,
-        clicado:        false,
-        combo:          0,
-        acertosSemErro: 0,
-        totalAcertos:   0,
-        divisoesSeguidas:0,
-        tempoInicio:    0,
-        tempoResposta:  999,
+    // Fallback seguro para nodes ausentes
+    function _safe(el) {
+        return el || { innerText:'', textContent:'', classList:{ add:function(){}, remove:function(){}, contains:function(){return false;} }, style:{}, offsetWidth:0, innerHTML:'' };
+    }
+    Object.keys(N).forEach(k => { if (!N[k]) N[k] = _safe(null); });
+
+    // ─ Estado do jogo ─────────────────────────────────────────
+    var S = {
+        nome    : localStorage.getItem('nomeJogador') || 'Amigo',
+        op      : localStorage.getItem('modoJogo')    || 'soma',
+        fase    : 1, totalFases: 30,
+        score   : 0, estrelas : 0,
+        n1:0, n2:0, resp:0,
+        bloq    : false,
+        audOk   : false, vozOk: false,
+        emoji   : '🍎',
+        clicado : false,
+        combo   : 0, totalAcertos:0, acertosSemErro:0,
+        divisoesSeg: 0, tempoInicio: 0, tempoResp: 999,
+        errosQuestao: 0,   // erros na questão atual (para TEA)
     };
 
-    // Emojis variados por fase
-    const EMOJIS = ['🍎','🦋','⭐','🌸','🎈','🚀','🍕','🎸','🐶','🌈','🦄','🎯','🏆','🍦','🌺'];
+    var EMOJIS = ['🍎','🦋','⭐','🌸','🎈','🚀','🍕','🎸','🐶','🌈','🦄','🎯','🍦','🌺','🎀'];
 
-    // Música de fundo
-    if (typeof gerenciarMusicaFundo === 'function') gerenciarMusicaFundo(1);
+    // ─ Início ────────────────────────────────────────────────
+    // Música de fundo: inicia quando usuário tocar
+    document.addEventListener('pointerdown', function inicMusica() {
+        document.removeEventListener('pointerdown', inicMusica);
+        if (typeof gerenciarMusicaFundo === 'function') gerenciarMusicaFundo(1);
+    });
 
     // ─ Utilitários ───────────────────────────────────────────
-    function falarJogo(texto, tipo = 'neutro') {
-        if (typeof falarSeguro === 'function' && texto) {
-            setTimeout(() => falarSeguro(texto, tipo), 100);
-        }
+
+    /**
+     * falarJogo: narração do sistema (pergunta, feedback).
+     * USA falar() — enfileira sem cortar o que está sendo dito.
+     */
+    function falarJogo(txt, tipo) {
+        tipo = tipo || 'neutro';
+        if (typeof falar === 'function' && txt)
+            falar(txt, tipo);
     }
 
-    function desbloquearSistemas() {
-        if (S.audioLiberado) return;
+    /**
+     * falarAcao: chamado APENAS quando o jogador toca algo.
+     * USA falarPrioritario() — interrompe e fala imediatamente.
+     */
+    function falarAcao(txt, tipo) {
+        tipo = tipo || 'neutro';
+        if (typeof falarPrioritario === 'function' && txt)
+            falarPrioritario(txt, tipo);
+    }
+
+    function desbloq() {
+        if (S.audOk) return;
         if (typeof liberarAudio === 'function') liberarAudio();
         if (typeof liberarVoz   === 'function') liberarVoz();
-        S.audioLiberado = true;
+        S.audOk = true;
     }
 
-    function atualizarBotoesModo() {
-        N.botoesModo.forEach(b => b.classList.toggle('ativo', b.dataset.modo === S.operacao));
+    function atualizarModo() {
+        document.querySelectorAll('.btn-modo').forEach(function(b) {
+            b.classList.toggle('ativo', b.dataset.modo === S.op);
+        });
     }
 
     function atualizarConqCount() {
-        if (N.conquCount && typeof totalConquistas === 'function')
-            N.conquCount.textContent = `🏆 ${totalConquistas()}`;
+        var t = typeof totalConquistas === 'function' ? totalConquistas() : 0;
+        N.conquCount.textContent = '🏆 ' + t;
     }
 
     // ─ HUD ───────────────────────────────────────────────────
     function atualizarHUD() {
-        if (N.score)    N.score.innerText    = S.score;
-        if (N.fase)     N.fase.innerText     = `Fase ${S.fase}/${S.totalFases}`;
+        N.score.textContent    = S.score;
+        N.estrelas.textContent = S.estrelas;
+        N.faseTxt.textContent  = 'Fase ' + S.fase + '/' + S.totalFases;
+
         if (N.barra && N.barra.style)
-            N.barra.style.width = `${(S.fase/S.totalFases)*100}%`;
+            N.barra.style.width = ((S.fase / S.totalFases) * 100) + '%';
 
-        if (N.estrelas) {
-            N.estrelas.innerText = S.estrelas;
-            N.estrelas.classList.remove('acerto-animado');
-            void N.estrelas.offsetWidth;
-            N.estrelas.classList.add('acerto-animado');
-        }
-
-        // Combo display
-        if (N.comboDisplay) {
-            if (S.combo >= 2) {
-                N.comboDisplay.textContent = S.combo >= 10 ? `🌟 COMBO x${S.combo}!!` : S.combo >= 5 ? `💥 COMBO x${S.combo}!` : `🔥 ${S.combo}x seguidos!`;
-                N.comboDisplay.classList.add('ativo');
-            } else {
-                N.comboDisplay.classList.remove('ativo');
-            }
+        // Combo
+        if (S.combo >= 2) {
+            N.comboBox.textContent = S.combo >= 10 ? '🌟 COMBO x'+S.combo+'!!' : S.combo >= 5 ? '💥 COMBO x'+S.combo+'!' : '🔥 '+S.combo+'x!';
+            N.comboBox.classList.add('ativo');
+        } else {
+            N.comboBox.classList.remove('ativo');
         }
 
         atualizarConqCount();
     }
 
-    // ─ Ajuda visual ──────────────────────────────────────────
-    function renderizarAjuda(destacar = false) {
-        if (!N.ajuda) return;
-        N.ajuda.innerHTML = '';
-        const max = Math.min(S.n1, 12);
-        for (let i = 0; i < max; i++) {
-            const span = document.createElement('span');
-            span.className = 'emoji-ajuda' + (destacar ? ' emoji-destaque' : '');
-            span.style.animationDelay = (i * 0.06) + 's';
-            span.setAttribute('aria-label', `${S.emoji} número ${i+1}`);
-            span.innerText = S.emoji;
-            N.ajuda.appendChild(span);
+    // ─ Renderizar objetos ────────────────────────────────────
+    /**
+     * Renderiza os objetos de ajuda visual na área central.
+     * SEMPRE visíveis, tamanho adaptativo.
+     * destaque: true quando em modo apoio (2ª tentativa+)
+     */
+    function renderizarObjetos(destaque) {
+        var area = N.ajuda;
+        area.innerHTML = '';
+        area.className = 'area-ajuda-base' + (destaque ? ' area-ajuda-destaque' : '');
+
+        // Máximo objetos que cabem na área
+        // Mobile pequeno: max 8, normal: max 10
+        var maxItens = window.innerWidth < 380 ? 6 : (window.innerWidth < 500 ? 8 : 10);
+        var n1Show   = Math.min(S.n1, maxItens);
+
+        if (S.op === 'soma') {
+            // Dois grupos separados por "+"
+            var g1 = Math.min(S.n1, maxItens);
+            var g2 = Math.min(S.n2, maxItens);
+
+            var row = document.createElement('div');
+            row.className = 'obj-row';
+
+            // Grupo 1
+            var box1 = document.createElement('div');
+            box1.className = 'obj-box obj-box-soma1';
+            for (var i=0; i<g1; i++) {
+                var sp = document.createElement('span');
+                sp.className = 'obj-emoji' + (destaque ? ' obj-destaque':'');
+                sp.style.animationDelay = (i*0.05)+'s';
+                sp.textContent = S.emoji;
+                box1.appendChild(sp);
+            }
+            var lbl1 = document.createElement('div');
+            lbl1.className = 'obj-lbl'; lbl1.textContent = S.n1;
+            box1.appendChild(lbl1);
+
+            var op  = document.createElement('div'); op.className='obj-op'; op.textContent='➕';
+            
+            // Grupo 2
+            var box2 = document.createElement('div');
+            box2.className = 'obj-box obj-box-soma2';
+            for (var j=0; j<g2; j++) {
+                var sp2 = document.createElement('span');
+                sp2.className = 'obj-emoji' + (destaque ? ' obj-destaque':'');
+                sp2.style.animationDelay = ((g1+j)*0.05)+'s';
+                sp2.textContent = S.emoji;
+                box2.appendChild(sp2);
+            }
+            var lbl2 = document.createElement('div');
+            lbl2.className='obj-lbl'; lbl2.textContent=S.n2;
+            box2.appendChild(lbl2);
+
+            row.appendChild(box1); row.appendChild(op); row.appendChild(box2);
+            area.appendChild(row);
+
+        } else if (S.op === 'subtracao') {
+            var row2 = document.createElement('div'); row2.className='obj-row';
+            var box  = document.createElement('div'); box.className='obj-box obj-box-sub';
+            for (var k=0; k<n1Show; k++) {
+                var spk = document.createElement('span');
+                var riscado = (k >= (S.n1 - S.n2));
+                spk.className = 'obj-emoji' + (riscado?' obj-riscado':'') + (destaque&&!riscado?' obj-destaque':'');
+                spk.style.animationDelay=(k*0.05)+'s';
+                spk.textContent = S.emoji;
+                box.appendChild(spk);
+            }
+            var lbl3=document.createElement('div'); lbl3.className='obj-lbl'; lbl3.textContent=S.n1+' − '+S.n2;
+            box.appendChild(lbl3);
+            row2.appendChild(box); area.appendChild(row2);
+
+        } else { // divisão
+            var numGrupos  = Math.min(S.n2, 4);
+            var perGrupo   = Math.min(Math.ceil(S.n1 / S.n2), 4);
+            var rowD = document.createElement('div'); rowD.className='obj-row obj-row-div';
+
+            for (var g=0; g<numGrupos; g++) {
+                var gd = document.createElement('div'); gd.className='obj-box obj-box-div';
+                for (var h=0; h<perGrupo; h++) {
+                    var spd = document.createElement('span');
+                    spd.className='obj-emoji'+(destaque?' obj-destaque':'');
+                    spd.style.animationDelay=((g*perGrupo+h)*0.05)+'s';
+                    spd.textContent=S.emoji;
+                    gd.appendChild(spd);
+                }
+                var lgd=document.createElement('div'); lgd.className='obj-lbl-sm'; lgd.textContent=(g+1)+'º';
+                gd.appendChild(lgd);
+                rowD.appendChild(gd);
+            }
+            area.appendChild(rowD);
         }
 
-        // Label de contagem se modo apoio
-        if (destacar) {
-            const label = document.createElement('div');
-            label.className = 'ajuda-label-conta';
-            label.textContent = `👆 Conte: ${max} ${S.emoji}`;
-            N.ajuda.appendChild(label);
+        // Instrução sempre visível no modo apoio
+        if (destaque) {
+            var inst = document.createElement('div'); inst.className='obj-instrucao';
+            if (S.op==='soma')       inst.textContent='👆 Conta o 1º grupo + o 2º grupo!';
+            else if (S.op==='subtracao') inst.textContent='👆 Conta o que sobra depois de tirar!';
+            else                     inst.textContent='👆 Divide em grupos iguais!';
+            area.appendChild(inst);
         }
     }
 
-    // ─ Geração de questão ────────────────────────────────────
+    // ─ Gerar questão ─────────────────────────────────────────
     function gerarQuestao() {
         if (S.fase > S.totalFases) { finalizarJogo(); return; }
 
-        // Troca emoji a cada 2 fases
-        S.emoji = EMOJIS[Math.floor((S.fase-1) / 2) % EMOJIS.length];
+        S.emoji = EMOJIS[Math.floor((S.fase - 1) / 2) % EMOJIS.length];
 
-        let n1, n2, resp, sim;
-        switch (S.operacao) {
-            case 'subtracao':
-                n1 = ~~(Math.random()*9)+2; n2 = ~~(Math.random()*(n1-1))+1;
-                resp = n1-n2; sim = '−'; break;
-            case 'divisao':
-                n2 = ~~(Math.random()*4)+1; resp = ~~(Math.random()*5)+1;
-                n1 = n2*resp; sim = '÷'; break;
-            default:
-                n1 = ~~(Math.random()*10)+1; n2 = ~~(Math.random()*10)+1;
-                resp = n1+n2; sim = '+';
+        var n1, n2, resp, sim;
+        if (S.op === 'subtracao') {
+            n1=~~(Math.random()*9)+2; n2=~~(Math.random()*(n1-1))+1; resp=n1-n2; sim='−';
+        } else if (S.op === 'divisao') {
+            n2=~~(Math.random()*4)+1; resp=~~(Math.random()*5)+1; n1=n2*resp; sim='÷';
+        } else {
+            n1=~~(Math.random()*10)+1; n2=~~(Math.random()*10)+1; resp=n1+n2; sim='+';
         }
 
-        S.n1 = n1; S.n2 = n2; S.respostaCorreta = resp;
-        S.bloqueado   = false;
-        S.tempoInicio = Date.now();
+        S.n1=n1; S.n2=n2; S.resp=resp;
+        S.bloq=false; S.errosQuestao=0;
+        S.tempoInicio=Date.now();
 
-        // Reset apoio para nova questão
-        if (typeof resetarApoio === 'function') resetarApoio();
+        if (typeof resetarApoio==='function') resetarApoio();
 
-        if (N.pergunta) N.pergunta.innerText = `Quanto é ${n1} ${sim} ${n2}?`;
+        N.pergunta.textContent = 'Quanto é '+n1+' '+sim+' '+n2+'?';
+        // Força reanimação da pergunta
+        N.pergunta.style.animation='none'; void N.pergunta.offsetWidth;
+        N.pergunta.style.animation='';
 
         atualizarHUD();
-        renderizarAjuda();
+        renderizarObjetos(false);
         montarOpcoes();
 
-        if (S.audioLiberado && S.vozPronta)
-            falarJogo(`${S.nome}, quanto é ${n1} ${sim} ${n2}?`);
+        if (S.audOk && S.vozOk) {
+            // Sistema: enfileira sem cortar
+            falarJogo(S.nome+', quanto é '+n1+' '+sim+' '+n2+'?');
+        }
     }
 
-    // ─ Opções de resposta ────────────────────────────────────
+    // ─ Opções ────────────────────────────────────────────────
     function montarOpcoes() {
-        let ops = [S.respostaCorreta];
-        let tent = 0;
-        while (ops.length < 4 && tent < 50) {
-            tent++;
-            const n = S.respostaCorreta + (~~(Math.random()*7)-3);
-            if (n >= 0 && n !== S.respostaCorreta && !ops.includes(n)) ops.push(n);
+        var ops = [S.resp], t=0;
+        while(ops.length < 4 && t++ < 60) {
+            var n = S.resp + (~~(Math.random()*7)-3);
+            if (n >= 0 && !ops.includes(n)) ops.push(n);
         }
-        // garante 4 opções únicas
-        while (ops.length < 4) ops.push(ops.length + 1);
-        ops.sort(() => Math.random()-.5);
+        while(ops.length < 4) ops.push(ops.length * 2 + 1);
+        ops.sort(function(){ return Math.random()-.5; });
 
-        N.respostas.forEach((btn, i) => {
-            const txt = btn.querySelector('.choice-text');
-            if (txt) txt.innerText = ops[i];
+        N.respostas.forEach(function(btn, i) {
+            var txt = btn.querySelector('.choice-text');
+            if (txt) txt.textContent = ops[i];
             btn.classList.remove('correta','errada','acerto-animado','erro-animado');
-            btn.style.pointerEvents = 'auto';
-            btn.style.transform = 'scale(1)';
-            btn.style.background = '';
+            btn.style.pointerEvents='auto';
+            btn.style.transform='';
 
-            // Handler unificado mouse + touch
-            const handle = (e) => {
-                if (e.type === 'touchstart') e.preventDefault();
-                if (S.clicado || S.bloqueado) return;
-                S.clicado = true;
-                setTimeout(() => S.clicado = false, 380);
+            function handle(e) {
+                if (e.type==='touchstart') e.preventDefault();
+                if (S.clicado||S.bloq) return;
+                S.clicado=true; setTimeout(function(){ S.clicado=false; },380);
 
-                btn.style.transform = 'scale(0.92)';
-                setTimeout(() => btn.style.transform = 'scale(1)', 150);
+                btn.style.transform='scale(0.91)';
+                setTimeout(function(){ btn.style.transform=''; },150);
 
-                const touch = e.touches ? e.touches[0] : e;
-                particulaClique(touch.clientX, touch.clientY);
-                desbloquearSistemas();
-                if (typeof tocarSomClique === 'function') tocarSomClique();
+                var t2=e.touches?e.touches[0]:e;
+                particulaClique(t2.clientX,t2.clientY);
+                desbloq();
+                if(typeof tocarSomClique==='function') tocarSomClique();
 
-                if (!S.vozPronta) {
-                    S.vozPronta = true;
-                    falarJogo('Vamos começar!', 'festa');
-                    setTimeout(() => { if (N.pergunta) falarJogo(N.pergunta.innerText); }, 1200);
+                if (!S.vozOk) {
+                    // Primeiro toque do jogador: desbloqueia e fala prioritariamente
+                    S.vozOk = true;
+                    falarAcao('Vamos começar! ' + N.pergunta.textContent, 'festa');
                 } else {
-                    responder(btn, touch.clientX, touch.clientY);
+                    responder(btn, t2.clientX, t2.clientY);
                 }
-            };
-
-            btn.onmousedown  = (e) => { if (e.button === 0) handle(e); };
+            }
+            btn.onmousedown  = function(e){ if(e.button===0) handle(e); };
             btn.ontouchstart = handle;
         });
     }
 
     // ─ Responder ─────────────────────────────────────────────
     function responder(btn, ex, ey) {
-        if (S.bloqueado) return;
-        S.bloqueado = true;
-        N.respostas.forEach(b => b.style.pointerEvents = 'none');
+        if (S.bloq) return;
+        S.bloq = true;
+        N.respostas.forEach(function(b){ b.style.pointerEvents='none'; });
 
-        const txt = btn.querySelector('.choice-text');
-        const val = txt ? parseInt(txt.innerText) : null;
-        const ok  = val === S.respostaCorreta;
-
-        S.tempoResposta = (Date.now() - S.tempoInicio) / 1000;
+        var txt = btn.querySelector('.choice-text');
+        var val = txt ? parseInt(txt.textContent) : null;
+        var ok  = (val === S.resp);
+        S.tempoResp = (Date.now()-S.tempoInicio)/1000;
 
         if (ok) {
             // ── ACERTO ──────────────────────────────────────
             btn.classList.add('correta','acerto-animado');
-            soltarConfete(S.combo >= 5 ? 2 : 1);
-            if (typeof tocarSomAcerto === 'function') tocarSomAcerto();
+            soltarConfete(S.combo>=5?2:1);
 
-            S.score        += 10;
-            S.estrelas++;
-            S.combo++;
-            S.totalAcertos++;
-            S.acertosSemErro++;
-            if (S.operacao === 'divisao') S.divisoesSeguidas++;
-            else S.divisoesSeguidas = 0;
+            // Som de parabéns
+            if (typeof tocarSomAcerto==='function') tocarSomAcerto();
 
-            pontosFlutuantes(ex, ey, 10);
-            estrelaFlutuante(ex, ey - 40);
+            S.score+=10; S.estrelas++; S.combo++;
+            S.totalAcertos++; S.acertosSemErro++;
+            if (S.op==='divisao') S.divisoesSeg++; else S.divisoesSeg=0;
 
-            if (S.combo >= 2 && typeof mostrarComboBadge === 'function')
-                mostrarComboBadge(S.combo);
+            pontosFlutuantes(ex,ey,10);
+            estrelaFlutuante(ex,ey-42);
 
-            if (S.combo >= 5 && typeof tocarSomBonus === 'function')
-                setTimeout(() => tocarSomBonus(), 350);
+            if (S.combo>=2 && typeof mostrarComboBadge==='function') mostrarComboBadge(S.combo);
+            if (S.combo>=5 && typeof tocarSomBonus==='function') setTimeout(function(){ tocarSomBonus(); },320);
 
-            const frasesAcerto = [
-                `Parabéns ${S.nome}! Você acertou!`,
-                `Isso mesmo ${S.nome}! Você é demais!`,
-                `Muito bem ${S.nome}! Continue assim!`,
-                `Perfeito ${S.nome}! Você arrasou!`,
+            var fa=[
+                'Parabéns '+S.nome+'! Você acertou!',
+                'Isso mesmo '+S.nome+'! Você é demais!',
+                'Muito bem '+S.nome+'! Continue assim!',
+                'Perfeito '+S.nome+'! Você arrasou!',
+                'Uau '+S.nome+'! Que resposta incrível!',
             ];
-            falarJogo(frasesAcerto[~~(Math.random()*frasesAcerto.length)], 'festa');
-
+            // Ação do jogador: interrompe qualquer narração e fala parabéns
+            falarAcao(fa[~~(Math.random()*fa.length)], 'festa');
             atualizarHUD();
 
-            // Verifica conquistas
-            if (typeof verificarConquistas === 'function') {
+            if (typeof verificarConquistas==='function') {
                 verificarConquistas({
-                    fase: S.fase, score: S.score, combo: S.combo,
-                    totalAcertos: S.totalAcertos, acertosSemErro: S.acertosSemErro,
-                    tempoResposta: S.tempoResposta, estrelas: S.estrelas,
-                    divisoesSeguidas: S.divisoesSeguidas,
+                    fase:S.fase, score:S.score, combo:S.combo,
+                    totalAcertos:S.totalAcertos, acertosSemErro:S.acertosSemErro,
+                    tempoResposta:S.tempoResp, estrelas:S.estrelas,
+                    divisoesSeguidas:S.divisoesSeg,
                 });
             }
 
-            setTimeout(() => {
+            setTimeout(function() {
                 S.fase++;
-                // Nível up a cada 5 fases
-                if (S.fase % 5 === 1 && S.fase > 1) {
-                    nivelUpPopup(S.fase - 1);
-                    if (typeof tocarSomNivel === 'function') tocarSomNivel();
-                    // Muda trilha a cada 10 fases
-                    if (typeof gerenciarMusicaFundo === 'function') {
-                        if (S.fase <= 10)      gerenciarMusicaFundo(1);
-                        else if (S.fase <= 20) gerenciarMusicaFundo(2);
-                        else                   gerenciarMusicaFundo(3);
-                    }
+                if (S.fase%5===1 && S.fase>1) {
+                    nivelUpPopup(S.fase-1);
+                    if(typeof tocarSomNivel==='function') tocarSomNivel();
+                }
+                // Troca trilha sonora
+                if (typeof gerenciarMusicaFundo==='function') {
+                    if (S.fase<=10)      gerenciarMusicaFundo(1);
+                    else if (S.fase<=20) gerenciarMusicaFundo(2);
+                    else                 gerenciarMusicaFundo(3);
                 }
                 gerarQuestao();
-            }, 1400);
+            }, 1500);
 
         } else {
             // ── ERRO ─────────────────────────────────────────
             btn.classList.add('errada','erro-animado');
             document.body.classList.add('shake');
-            if (typeof tocarSomErro === 'function') tocarSomErro();
+            if(typeof tocarSomErro==='function') tocarSomErro();
 
-            S.combo = 0;
-            S.acertosSemErro = 0;
-            S.divisoesSeguidas = 0;
+            S.combo=0; S.acertosSemErro=0; S.divisoesSeg=0; S.errosQuestao++;
             atualizarHUD();
 
-            // Revela correta
-            N.respostas.forEach(b => {
-                const t = b.querySelector('.choice-text');
-                if (t && parseInt(t.innerText) === S.respostaCorreta) b.classList.add('correta');
+            // Revela resposta correta
+            N.respostas.forEach(function(b){
+                var t2=b.querySelector('.choice-text');
+                if(t2&&parseInt(t2.textContent)===S.resp) b.classList.add('correta');
             });
 
-            // Atualiza visual de apoio (objetos aparecem na 2ª tentativa)
-            if (typeof registrarErroApoio === 'function') {
-                const sim = S.operacao === 'subtracao' ? '−' : S.operacao === 'divisao' ? '÷' : '+';
-                registrarErroApoio(
-                    `${S.nome}, quanto é ${S.n1} ${sim} ${S.n2}?`,
-                    S.n1, S.n2, S.emoji
-                );
-            }
-
-            // Na 2ª tentativa em diante: destaca objetos de contagem
-            const erros = parseInt(btn._erros || 0) + 1;
-            if (erros >= 2) renderizarAjuda(true);
-
-            setTimeout(() => {
+            // Sistema TEA — aguarda o shake terminar antes de disparar a narração
+            setTimeout(function() {
                 document.body.classList.remove('shake');
-                // NÃO avança fase! Questão permanece até acertar
-                S.bloqueado = false;
+
+                // A partir do 2º erro: mostra objetos visuais + painel de instrução
+                if (S.errosQuestao >= 2) {
+                    renderizarObjetos(true);
+                    if (typeof _mostrarPainelInstrucao === 'function') {
+                        _mostrarPainelInstrucao(S.n1, S.n2, S.emoji, S.op);
+                    }
+                }
+
+                // Registra o erro no sistema de apoio (dispara narração sequencial)
+                if (typeof registrarErroApoio === 'function') {
+                    var sim2 = S.op==='subtracao' ? '−' : S.op==='divisao' ? '÷' : '+';
+                    registrarErroApoio(
+                        S.nome+', quanto é '+S.n1+' '+sim2+' '+S.n2+'?',
+                        S.n1, S.n2, S.emoji, S.op
+                    );
+                }
+
+                S.bloq = false;
                 montarOpcoes();
-                N.respostas.forEach(b => b.style.pointerEvents = 'auto');
-            }, 1800);
+                N.respostas.forEach(function(b){ b.style.pointerEvents='auto'; });
+            }, 1600);
         }
     }
 
-    // ─ Finalizar ─────────────────────────────────────────────
+    // ─ Fim de jogo ───────────────────────────────────────────
     function finalizarJogo() {
         localStorage.setItem('mostRecentScore', S.score);
         localStorage.setItem('estrelas', S.estrelas);
 
-        if (typeof verificarConquistas === 'function')
-            verificarConquistas({ fase:31, score:S.score, combo:S.combo, totalAcertos:S.totalAcertos, acertosSemErro:S.acertosSemErro });
+        if(typeof verificarConquistas==='function')
+            verificarConquistas({fase:31,score:S.score,combo:S.combo,totalAcertos:S.totalAcertos,acertosSemErro:S.acertosSemErro});
 
         soltarConfete(3);
-        if (typeof tocarSomConquista === 'function') tocarSomConquista();
-        falarJogo(`Incrível ${S.nome}! Você completou o desafio com ${S.score} pontos! Você é um campeão!`, 'festa');
+        if(typeof tocarSomFinal==='function') tocarSomFinal();
+        // Fim de jogo: usa falarAcao para garantir que fala imediatamente
+        falarAcao('Incrível '+S.nome+'! Você completou o desafio com '+S.score+' pontos! Você é um campeão!','festa');
 
-        setTimeout(() => {
+        setTimeout(function() {
             document.body.classList.add('fade-out');
-            setTimeout(() => window.location.href = 'end.html', 400);
-        }, 3000);
+            setTimeout(function(){ window.location.href='end.html'; },400);
+        }, 3200);
     }
 
     // ─ Botões de modo ────────────────────────────────────────
-    atualizarBotoesModo();
-    N.botoesModo.forEach(btn => {
-        const h = (e) => {
-            if (e.type === 'touchstart') e.preventDefault();
-            if (S.clicado) return;
-            S.clicado = true; setTimeout(() => S.clicado = false, 300);
-            const t = e.touches ? e.touches[0] : e;
-            particulaClique(t.clientX, t.clientY);
-            S.operacao = btn.dataset.modo || 'soma';
-            localStorage.setItem('modoJogo', S.operacao);
-            atualizarBotoesModo();
-            S.fase=1; S.score=0; S.combo=0; S.totalAcertos=0; S.acertosSemErro=0;
+    atualizarModo();
+    document.querySelectorAll('.btn-modo').forEach(function(btn){
+        function hm(e) {
+            if(e.type==='touchstart') e.preventDefault();
+            if(S.clicado) return; S.clicado=true; setTimeout(function(){S.clicado=false;},300);
+            var t2=e.touches?e.touches[0]:e;
+            particulaClique(t2.clientX,t2.clientY);
+            S.op=btn.dataset.modo||'soma';
+            localStorage.setItem('modoJogo',S.op);
+            atualizarModo();
+            S.fase=1;S.score=0;S.combo=0;S.totalAcertos=0;S.acertosSemErro=0;S.errosQuestao=0;
+            if(typeof resetarApoio==='function') resetarApoio();
             gerarQuestao();
-        };
-        btn.onmousedown  = (e) => { if(e.button===0) h(e); };
-        btn.ontouchstart = h;
+        }
+        btn.onmousedown=(e)=>{ if(e.button===0) hm(e); };
+        btn.ontouchstart=hm;
     });
 
-    // ─ Inicializar ───────────────────────────────────────────
-    requestAnimationFrame(() => gerarQuestao());
+    // ─ Start ─────────────────────────────────────────────────
+    requestAnimationFrame(gerarQuestao);
 });
